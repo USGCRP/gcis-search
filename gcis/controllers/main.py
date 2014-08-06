@@ -1,4 +1,6 @@
-from flask import Blueprint, render_template, flash, request, redirect, url_for
+import json, requests
+from datetime import datetime
+from flask import Blueprint, render_template, flash, request, redirect, url_for, Response, current_app
 from flask.ext.login import login_user, logout_user, login_required
 
 from gcis import cache
@@ -11,7 +13,9 @@ main = Blueprint('main', __name__)
 @main.route('/')
 @cache.cached(timeout=1000)
 def home():
-    return render_template('index.html')
+    return render_template('facetview.html',
+                           title='GCIS FacetView',
+                           current_year=datetime.now().year)
 
 
 @main.route("/login", methods=["GET", "POST"])
@@ -45,3 +49,32 @@ def logout():
 @login_required
 def restricted():
     return "You can only see this if you are logged in!", 200
+
+
+@main.route("/query", methods=['GET'])
+def query():
+    # get callback, source
+    callback = request.args.get('callback')
+    source = request.args.get('source')
+
+    # query
+    es_url = current_app.config['ELASTICSEARCH_URL']
+    es_index = current_app.config['ELASTICSEARCH_INDEX']
+    #current_app.logger.debug("ES query for query(): %s" % json.dumps(json.loads(source), indent=2))
+    r = requests.post('%s/%s/_search' % (es_url, es_index), data=source)
+    result = r.json()
+    if r.status_code != 200:
+        current_app.logger.debug("Failed to query ES. Got status code %d:\n%s" %
+                                 (r.status_code, json.dumps(result, indent=2)))
+    r.raise_for_status()
+    #current_app.logger.debug("result: %s" % pformat(r.json()))
+
+    # return only one url
+    for hit in result['hits']['hits']:
+        # emulate result format from ElasticSearch <1.0
+        #current_app.logger.debug("hit: %s" % pformat(hit))
+        if '_source' in hit: hit.setdefault('fields', {}).update(hit['_source'])
+
+    # return JSONP
+    return Response('%s(%s)' % (callback, json.dumps(result)),
+                    mimetype="application/javascript")

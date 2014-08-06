@@ -4,6 +4,7 @@ class Config(object):
     ELASTICSEARCH_URL = 'http://127.0.0.1:9200'
     ELASTICSEARCH_INDEX = 'gcis'
     ELASTICSEARCH_SETTINGS = '../config/es_settings.json'
+    ELASTICSEARCH_MAPPING = '../config/es_mapping.json'
 
 class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///../database.db'
