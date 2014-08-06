@@ -1,6 +1,9 @@
 class Config(object):
     SECRET_KEY = 'secret key'
-
+    GCIS_REST_URL = 'http://127.0.0.1:3000'
+    ELASTICSEARCH_URL = 'http://127.0.0.1:9200'
+    ELASTICSEARCH_INDEX = 'gcis'
+    ELASTICSEARCH_SETTINGS = '../config/es_settings.json'
 
 class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///../database.db'
