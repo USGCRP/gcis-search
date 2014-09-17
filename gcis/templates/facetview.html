@@ -144,21 +144,21 @@ jQuery(document).ready(function($) {
     search_url: "{{ url_for('.query') }}?",
     search_index: 'elasticsearch',
     facets: [
-        {'field':'identifier', 'display': 'identifier'}, 
-        {'field':'chapter_identifier.raw', 'display': 'chapter'},
+        {'field':'_type', 'display': 'type'},
+        {'field':'chapter_identifier.raw', 'display': 'chapter ID'},
+        {'field':'href_metadata.chapter.number', 'display': 'chapter number'},
         {'field':'report_identifier.raw', 'display': 'report'}, 
         {'field':'title.raw', 'display': 'title'},
-        {'field':'ordinal', 'display': 'ordinal'},
-        {'field':'create_dt', 'display': 'creation date', 'type': 'date'}
+        {'field':'create_dt', 'display': 'creation date', 'type': 'date'},
+        {'field':'identifier', 'display': 'identifier'}
     ],
     time_fields: [
         'create_dt',
     ],
 //    location_field: 'location',
-//    json_fields: [
-//        'metadata.user_tags',
-//        'images'
-//    ],
+    json_fields: [
+        'href_metadata.files'
+    ],
 //    filterchoice_result_fields: {
 //        'metadata.version': 'metadata.version',
 //        'metadata.tags': 'metadata.tags.untouched',
@@ -187,7 +187,7 @@ jQuery(document).ready(function($) {
       size: 10
     },
     pager_on_top: true,
-    sort: [{ '_timestamp': { "order": "desc"} }],
+    sort: [{ 'identifier.raw': { "order": "asc"} }],
     fields: [ '_timestamp', '_source'],
     display_images: false,
     pre_search_callback: function() {
@@ -216,10 +216,68 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": " (",
-          "field": "title",
+          "field": "_type",
           "post": ")"
         }
-      ]
+      ],
+      [
+        {
+          "pre": "<b>title:</b> <font color='blue'>",
+          "field": "title",
+          "post": "</font>"
+        }
+      ],
+      [
+        {
+          "pre": "<table><tr><td><div id='img_grid_",
+          "field": "identifier",
+          "post": "'></div><script>$(function() {\n" +
+                  "  var imgData = [];\n"
+        },
+        {
+          "pre": "  imgData = ",
+          "field": "href_metadata.files",
+          "post": ";\n"
+        },
+        {
+          "pre": "  var id='",
+          "field": "identifier",
+          "post": "';\n" +
+                  "  if (imgData.length > 0) {\n" +
+                  "    var grid =  $('div[id=\"img_grid_' + id + '\"]');\n" +
+                  "    grid.append('<table><tr>');\n" +
+                  "    for (var i=0; i<imgData.length; i++) {\n" +
+                  "      var img_url = imgData[i].href;\n" +
+                  "      var small_img_url = imgData[i].href;\n" +
+                  "      var tooltip = '';\n" +
+                  "      if (typeof imgData[i].tooltip == 'string' || imgData[i].tooltip instanceof String) {\n" +
+                  "        if (imgData[i].tooltip.length > 0) \n" +
+                  "          tooltip = '<span class=\"label label-info\">' + imgData[i].tooltip + '</span>';\n" +
+                  "      }\n" +
+                  "      grid.append('<td>' + tooltip + '<a target=\"_blank\" href=\"' + img_url + '\">" +
+                  "  <img src=\"' + small_img_url + '\" class=\"img-rounded\" width=\"250px\" " +
+                  "height=\"250px\" /></a></td>');\n" +
+                  "      if (i % 3 == 2) grid.append('</tr><tr>');\n" +
+                  "    }\n" +
+                  "    grid.append('<td><span class=\"label label-info\">region</span><div id=\"map_' + id + '\" class=\"map\"></div></td></tr></table>');\n" +
+                  "  }\n" +
+                  "});<\/script>"
+        }
+      ],
+      [
+        {
+          "pre": "<b>caption:</b> ",
+          "field": "caption",
+          "post": ""
+        }
+      ],
+      [
+        {
+          "pre": "<b>statement:</b> ",
+          "field": "statement",
+          "post": ""
+        }
+      ],
     ]
   });
 

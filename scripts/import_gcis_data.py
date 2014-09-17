@@ -30,6 +30,10 @@ def index_figures(gcis_url, es_url, index, settings, mapping):
         figures = r.json()
         for figure in figures:
             #print json.dumps(figure, indent=2)
+            if 'href' in figure:
+                r = requests.get(figure['href'])
+                r.raise_for_status()
+                figure['href_metadata'] = r.json()
             conn.index(figure, index, 'figure', figure['identifier'])
 
 
@@ -49,6 +53,10 @@ def index_findings(gcis_url, es_url, index, settings, mapping):
         findings = r.json()
         for finding in findings:
             #print json.dumps(finding, indent=2)
+            if 'href' in finding:
+                r = requests.get(finding['href'])
+                r.raise_for_status()
+                finding['href_metadata'] = r.json()
             conn.index(finding, index, 'finding', finding['identifier'])
 
 
@@ -68,6 +76,10 @@ def index_tables(gcis_url, es_url, index, settings, mapping):
         tables = r.json()
         for table in tables:
             #print json.dumps(table, indent=2)
+            if 'href' in table:
+                r = requests.get(table['href'])
+                r.raise_for_status()
+                table['href_metadata'] = r.json()
             conn.index(table, index, 'table', table['identifier'])
 
 

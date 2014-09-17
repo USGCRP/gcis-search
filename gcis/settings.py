@@ -1,6 +1,7 @@
 class Config(object):
     SECRET_KEY = 'secret key'
-    GCIS_REST_URL = 'http://127.0.0.1:3000'
+    #GCIS_REST_URL = 'http://127.0.0.1:3000'
+    GCIS_REST_URL = 'http://data.globalchange.gov'
     ELASTICSEARCH_URL = 'http://127.0.0.1:9200'
     ELASTICSEARCH_INDEX = 'gcis'
     ELASTICSEARCH_SETTINGS = '../config/es_settings.json'

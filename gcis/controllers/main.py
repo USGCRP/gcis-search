@@ -74,6 +74,7 @@ def query():
         # emulate result format from ElasticSearch <1.0
         #current_app.logger.debug("hit: %s" % pformat(hit))
         if '_source' in hit: hit.setdefault('fields', {}).update(hit['_source'])
+        hit['fields']['_type'] = hit['_type']
 
     # return JSONP
     return Response('%s(%s)' % (callback, json.dumps(result)),
