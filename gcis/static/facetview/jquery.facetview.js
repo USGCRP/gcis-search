@@ -1055,13 +1055,6 @@ search box - the end user will not know they are happening.
                         <li class="active"><a>{{from}} &ndash; {{to}} of {{total}}</a></li> \
                         <li class="next"><a class="btn facetview_increment" href="{{to}}">next &raquo;</a></li> \
                     </ul> \
-                    <ul> \
-                        <li><a href="" target="_blank" id="wget_script" class="btn" data-toggle="tooltip" title="Download WGET script for manual download your search results">WGET Script</a></li> \
-                        <li><a href="" target="_blank" id="download" class="btn" data-toggle="tooltip" title="Download tarball (available for queries that yield 10 results or less)">Download All</a></li> \
-                        <li><a id="create_rule" class="btn" data-toggle="tooltip" title="Create rule to monitor this query">Monitor This</a></li> \
-                        <li><a id="process_this" class="btn" data-toggle="tooltip" title="Run job on this query">Process This</a></li> \
-                        <li><a id="grq_call" class="btn" data-toggle="tooltip" title="Provide GRQ REST URL for the JSON results of this query">JSON</a></li> \
-                    </ul> \
                 </div>';
             };
             $('.facetview_metadata', obj).first().html("Not found...");
