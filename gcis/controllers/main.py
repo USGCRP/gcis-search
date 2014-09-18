@@ -18,6 +18,14 @@ def home():
                            current_year=datetime.now().year)
 
 
+@main.route('/ceos_gcmd')
+@cache.cached(timeout=1000)
+def home_ceos_gcmd():
+    return render_template('facetview-ceos_gcmd.html',
+                           title='CEOS-GCMD Instruments FacetView',
+                           current_year=datetime.now().year)
+
+
 @main.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
@@ -60,6 +68,36 @@ def query():
     # query
     es_url = current_app.config['ELASTICSEARCH_URL']
     es_index = current_app.config['GCIS_ELASTICSEARCH_INDEX']
+    #current_app.logger.debug("ES query for query(): %s" % json.dumps(json.loads(source), indent=2))
+    r = requests.post('%s/%s/_search' % (es_url, es_index), data=source)
+    result = r.json()
+    if r.status_code != 200:
+        current_app.logger.debug("Failed to query ES. Got status code %d:\n%s" %
+                                 (r.status_code, json.dumps(result, indent=2)))
+    r.raise_for_status()
+    #current_app.logger.debug("result: %s" % pformat(r.json()))
+
+    # return only one url
+    for hit in result['hits']['hits']:
+        # emulate result format from ElasticSearch <1.0
+        #current_app.logger.debug("hit: %s" % pformat(hit))
+        if '_source' in hit: hit.setdefault('fields', {}).update(hit['_source'])
+        hit['fields']['_type'] = hit['_type']
+
+    # return JSONP
+    return Response('%s(%s)' % (callback, json.dumps(result)),
+                    mimetype="application/javascript")
+
+
+@main.route("/query_ceos_gcmd", methods=['GET'])
+def query_ceos_gcmd():
+    # get callback, source
+    callback = request.args.get('callback')
+    source = request.args.get('source')
+
+    # query
+    es_url = current_app.config['ELASTICSEARCH_URL']
+    es_index = current_app.config['CEOS_GCMD_ELASTICSEARCH_INDEX']
     #current_app.logger.debug("ES query for query(): %s" % json.dumps(json.loads(source), indent=2))
     r = requests.post('%s/%s/_search' % (es_url, es_index), data=source)
     result = r.json()
