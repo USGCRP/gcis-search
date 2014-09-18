@@ -88,10 +88,10 @@ if __name__ == "__main__":
     app = create_app('gcis.settings.%sConfig' % env.capitalize(), env=env)
     es_url = app.config['ELASTICSEARCH_URL']
     gcis_url =  app.config['GCIS_REST_URL']
-    index = app.config['ELASTICSEARCH_INDEX']
-    with open(app.config['ELASTICSEARCH_SETTINGS']) as f:
+    index = app.config['GCIS_ELASTICSEARCH_INDEX']
+    with open(app.config['GCIS_ELASTICSEARCH_SETTINGS']) as f:
         settings = json.load(f)
-    with open(app.config['ELASTICSEARCH_MAPPING']) as f:
+    with open(app.config['GCIS_ELASTICSEARCH_MAPPING']) as f:
         mapping = json.load(f)
 
 
