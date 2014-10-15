@@ -80,6 +80,60 @@ def index_tables(gcis_url, es_url, index):
             conn.index(table, index, 'table', table['identifier'])
 
 
+def index_instruments(gcis_url, es_url, index):
+    """Index GCIS instruments into ElasticSearch."""
+
+    gcis_type = 'instrument'
+    conn = get_es_conn(es_url, index)
+    r = requests.get("%s/%s.json" % (gcis_url, gcis_type))
+    r.raise_for_status()
+    results = r.json()
+    for res in results:
+        res_id = res['identifier']
+        r = requests.get("%s/%s/%s.json" % (gcis_url, gcis_type, res_id))
+        r.raise_for_status()
+        md = r.json()
+        if 'files' in md:
+            md.setdefault('href_metadata', {})['files'] = md['files']
+        conn.index(md, index, gcis_type, md['identifier'])
+
+
+def index_platforms(gcis_url, es_url, index):
+    """Index GCIS platforms into ElasticSearch."""
+
+    gcis_type = 'platform'
+    conn = get_es_conn(es_url, index)
+    r = requests.get("%s/%s.json" % (gcis_url, gcis_type))
+    r.raise_for_status()
+    results = r.json()
+    for res in results:
+        res_id = res['identifier']
+        r = requests.get("%s/%s/%s.json" % (gcis_url, gcis_type, res_id))
+        r.raise_for_status()
+        md = r.json()
+        if 'files' in md:
+            md.setdefault('href_metadata', {})['files'] = md['files']
+        conn.index(md, index, gcis_type, md['identifier'])
+
+
+def index_datasets(gcis_url, es_url, index):
+    """Index GCIS datasets into ElasticSearch."""
+
+    gcis_type = 'dataset'
+    conn = get_es_conn(es_url, index)
+    r = requests.get("%s/%s.json" % (gcis_url, gcis_type))
+    r.raise_for_status()
+    results = r.json()
+    for res in results:
+        res_id = res['identifier']
+        r = requests.get("%s/%s/%s.json" % (gcis_url, gcis_type, res_id))
+        r.raise_for_status()
+        md = r.json()
+        if 'files' in md:
+            md.setdefault('href_metadata', {})['files'] = md['files']
+        conn.index(md, index, gcis_type, md['identifier'])
+
+
 if __name__ == "__main__":
     env = os.environ.get('GCIS_ENV', 'prod')
     app = create_app('gcis.settings.%sConfig' % env.capitalize(), env=env)
@@ -90,3 +144,6 @@ if __name__ == "__main__":
     index_figures(gcis_url, es_url, index)
     index_findings(gcis_url, es_url, index)
     index_tables(gcis_url, es_url, index)
+    index_instruments(gcis_url, es_url, index)
+    index_platforms(gcis_url, es_url, index)
+    index_datasets(gcis_url, es_url, index)

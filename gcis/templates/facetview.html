@@ -145,6 +145,7 @@ jQuery(document).ready(function($) {
     search_index: 'elasticsearch',
     facets: [
         {'field':'_type', 'display': 'type'},
+        {'field':'contributors.organization.name.raw', 'display': 'organization'},
         {'field':'chapter_identifier.raw', 'display': 'chapter ID'},
         {'field':'href_metadata.chapter.number', 'display': 'chapter number'},
         {'field':'report_identifier.raw', 'display': 'report'}, 
@@ -222,6 +223,13 @@ jQuery(document).ready(function($) {
       ],
       [
         {
+          "pre": "<b>name:</b> <font color='blue'>",
+          "field": "name",
+          "post": "</font>"
+        }
+      ],
+      [
+        {
           "pre": "<b>title:</b> <font color='blue'>",
           "field": "title",
           "post": "</font>"
@@ -262,6 +270,20 @@ jQuery(document).ready(function($) {
                   "    grid.append('<td><span class=\"label label-info\">region</span><div id=\"map_' + id + '\" class=\"map\"></div></td></tr></table>');\n" +
                   "  }\n" +
                   "});<\/script>"
+        }
+      ],
+      [
+        {
+          "pre": "<b>description:</b><br/>",
+          "field": "description",
+          "post": ""
+        }
+      ],
+      [
+        {
+          "pre": "<b>attributes:</b><br/>",
+          "field": "attributes",
+          "post": ""
         }
       ],
       [
