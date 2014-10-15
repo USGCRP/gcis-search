@@ -80,7 +80,39 @@ def index_tables(gcis_url, es_url, index):
             conn.index(table, index, 'table', table['identifier'])
 
 
-def index_instruments(gcis_url, es_url, index):
+def index_platforms(gcis_url, es_url, index):
+    """Index GCIS platforms into ElasticSearch."""
+
+    gcis_type = 'platform'
+    conn = get_es_conn(es_url, index)
+    r = requests.get("%s/%s.json" % (gcis_url, gcis_type))
+    r.raise_for_status()
+    results = r.json()
+    platforms_by_instr = {}
+    for res in results:
+        res_id = res['identifier']
+        r = requests.get("%s/%s/%s.json" % (gcis_url, gcis_type, res_id))
+        r.raise_for_status()
+        md = r.json()
+        if 'files' in md:
+            md.setdefault('href_metadata', {})['files'] = md['files']
+        r = requests.get("%s/%s/%s/instrument.json" % (gcis_url, gcis_type, res_id))
+        r.raise_for_status()
+        pairs = r.json()
+        instruments = []
+        for pair in pairs:
+            r = requests.get("%s/%s/%s.json" % (gcis_url, 'instrument', pair['instrument_identifier']))
+            r.raise_for_status()
+            instr_name = r.json()['name']
+            instruments.append(instr_name)
+            platforms_by_instr.setdefault(instr_name, set()).add(md['name'])
+        md['instrument_names'] = instruments
+        md['platform_names'] = [md['name']]
+        conn.index(md, index, gcis_type, md['identifier'])
+    return platforms_by_instr
+
+
+def index_instruments(gcis_url, es_url, index, platforms_by_instr):
     """Index GCIS instruments into ElasticSearch."""
 
     gcis_type = 'instrument'
@@ -95,24 +127,8 @@ def index_instruments(gcis_url, es_url, index):
         md = r.json()
         if 'files' in md:
             md.setdefault('href_metadata', {})['files'] = md['files']
-        conn.index(md, index, gcis_type, md['identifier'])
-
-
-def index_platforms(gcis_url, es_url, index):
-    """Index GCIS platforms into ElasticSearch."""
-
-    gcis_type = 'platform'
-    conn = get_es_conn(es_url, index)
-    r = requests.get("%s/%s.json" % (gcis_url, gcis_type))
-    r.raise_for_status()
-    results = r.json()
-    for res in results:
-        res_id = res['identifier']
-        r = requests.get("%s/%s/%s.json" % (gcis_url, gcis_type, res_id))
-        r.raise_for_status()
-        md = r.json()
-        if 'files' in md:
-            md.setdefault('href_metadata', {})['files'] = md['files']
+        md['platform_names'] = platforms_by_instr[md['name']]
+        md['instrument_names'] = [md['name']]
         conn.index(md, index, gcis_type, md['identifier'])
 
 
@@ -144,6 +160,6 @@ if __name__ == "__main__":
     index_figures(gcis_url, es_url, index)
     index_findings(gcis_url, es_url, index)
     index_tables(gcis_url, es_url, index)
-    index_instruments(gcis_url, es_url, index)
-    index_platforms(gcis_url, es_url, index)
+    platforms_by_instr = index_platforms(gcis_url, es_url, index)
+    index_instruments(gcis_url, es_url, index, platforms_by_instr)
     index_datasets(gcis_url, es_url, index)

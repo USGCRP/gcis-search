@@ -146,6 +146,8 @@ jQuery(document).ready(function($) {
     facets: [
         {'field':'_type', 'display': 'type'},
         {'field':'contributors.organization.name.raw', 'display': 'organization'},
+        {'field':'platform_names.raw', 'display': 'platform'},
+        {'field':'instrument_names.raw', 'display': 'instrument'},
         {'field':'chapter_identifier.raw', 'display': 'chapter ID'},
         {'field':'href_metadata.chapter.number', 'display': 'chapter number'},
         {'field':'report_identifier.raw', 'display': 'report'}, 
@@ -276,6 +278,20 @@ jQuery(document).ready(function($) {
         {
           "pre": "<b>description:</b><br/>",
           "field": "description",
+          "post": ""
+        }
+      ],
+      [
+        {
+          "pre": "<b>platforms:</b><br/>",
+          "field": "platform_names",
+          "post": ""
+        }
+      ],
+      [
+        {
+          "pre": "<b>instruments:</b><br/>",
+          "field": "instrument_names",
           "post": ""
         }
       ],
