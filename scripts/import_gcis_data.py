@@ -100,14 +100,20 @@ def index_platforms(gcis_url, es_url, index):
         r.raise_for_status()
         pairs = r.json()
         instruments = []
+        instr_ids = []
         for pair in pairs:
-            r = requests.get("%s/%s/%s.json" % (gcis_url, 'instrument', pair['instrument_identifier']))
+            instr_id = pair['instrument_identifier']
+            r = requests.get("%s/%s/%s.json" % (gcis_url, 'instrument', instr_id))
             r.raise_for_status()
             instr_name = r.json()['name']
+            instr_ids.append(instr_id)
             instruments.append(instr_name)
-            platforms_by_instr.setdefault(instr_name, set()).add(md['name'])
+            platforms_by_instr.setdefault('by_name', {}).setdefault(instr_name, set()).add(md['name'])
+            platforms_by_instr.setdefault('by_id', {}).setdefault(instr_id, set()).add(res_id)
         md['instrument_names'] = instruments
+        md['instrument_identifiers'] = instr_ids
         md['platform_names'] = [md['name']]
+        md['platform_identifiers'] = [res_id]
         conn.index(md, index, gcis_type, md['identifier'])
     return platforms_by_instr
 
@@ -127,8 +133,10 @@ def index_instruments(gcis_url, es_url, index, platforms_by_instr):
         md = r.json()
         if 'files' in md:
             md.setdefault('href_metadata', {})['files'] = md['files']
-        md['platform_names'] = platforms_by_instr[md['name']]
+        md['platform_identifiers'] = platforms_by_instr['by_id'][res_id]
+        md['platform_names'] = platforms_by_instr['by_name'][md['name']]
         md['instrument_names'] = [md['name']]
+        md['instrument_identifiers'] = [res_id]
         conn.index(md, index, gcis_type, md['identifier'])
 
 
