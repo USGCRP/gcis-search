@@ -5,20 +5,19 @@ from pyes import ES
 from gcis import create_app
 
 
-def get_es_conn(es_url, index, settings, mapping):
+def get_es_conn(es_url, index):
     """Create connection and create index if it doesn't exist."""
 
     conn = ES(es_url)
     if not conn.indices.exists_index(index):
-        conn.indices.create_index(index, settings)
+        conn.indices.create_index(index)
     return conn
 
 
-def index_figures(gcis_url, es_url, index, settings, mapping):
+def index_figures(gcis_url, es_url, index):
     """Index GCIS figures into ElasticSearch."""
 
-    conn = get_es_conn(es_url, index, settings, mapping)
-    conn.indices.put_mapping('figure', mapping, [index])
+    conn = get_es_conn(es_url, index)
     r = requests.get("%s/report.json" % gcis_url, params={ 'all': 1 })
     r.raise_for_status()
     reports = r.json()
@@ -37,11 +36,10 @@ def index_figures(gcis_url, es_url, index, settings, mapping):
             conn.index(figure, index, 'figure', figure['identifier'])
 
 
-def index_findings(gcis_url, es_url, index, settings, mapping):
+def index_findings(gcis_url, es_url, index):
     """Index GCIS findings into ElasticSearch."""
 
-    conn = get_es_conn(es_url, index, settings, mapping)
-    conn.indices.put_mapping('finding', mapping, [index])
+    conn = get_es_conn(es_url, index)
     r = requests.get("%s/report.json" % gcis_url, params={ 'all': 1 })
     r.raise_for_status()
     reports = r.json()
@@ -60,11 +58,10 @@ def index_findings(gcis_url, es_url, index, settings, mapping):
             conn.index(finding, index, 'finding', finding['identifier'])
 
 
-def index_tables(gcis_url, es_url, index, settings, mapping):
+def index_tables(gcis_url, es_url, index):
     """Index GCIS tables into ElasticSearch."""
 
-    conn = get_es_conn(es_url, index, settings, mapping) 
-    conn.indices.put_mapping('table', mapping, [index])
+    conn = get_es_conn(es_url, index)
     r = requests.get("%s/report.json" % gcis_url, params={ 'all': 1 })
     r.raise_for_status()
     reports = r.json()
@@ -89,12 +86,7 @@ if __name__ == "__main__":
     es_url = app.config['ELASTICSEARCH_URL']
     gcis_url =  app.config['GCIS_REST_URL']
     index = app.config['GCIS_ELASTICSEARCH_INDEX']
-    with open(app.config['GCIS_ELASTICSEARCH_SETTINGS']) as f:
-        settings = json.load(f)
-    with open(app.config['GCIS_ELASTICSEARCH_MAPPING']) as f:
-        mapping = json.load(f)
 
-
-    index_figures(gcis_url, es_url, index, settings, mapping)
-    index_findings(gcis_url, es_url, index, settings, mapping)
-    index_tables(gcis_url, es_url, index, settings, mapping)
+    index_figures(gcis_url, es_url, index)
+    index_findings(gcis_url, es_url, index)
+    index_tables(gcis_url, es_url, index)
