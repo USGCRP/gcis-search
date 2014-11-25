@@ -133,8 +133,8 @@ def index_instruments(gcis_url, es_url, index, platforms_by_instr):
         md = r.json()
         if 'files' in md:
             md.setdefault('href_metadata', {})['files'] = md['files']
-        md['platform_identifiers'] = platforms_by_instr['by_id'][res_id]
-        md['platform_names'] = platforms_by_instr['by_name'][md['name']]
+        md['platform_identifiers'] = platforms_by_instr['by_id'].get(res_id, [])
+        md['platform_names'] = platforms_by_instr['by_name'].get(md['name'], [])
         md['instrument_names'] = [md['name']]
         md['instrument_identifiers'] = [res_id]
         conn.index(md, index, gcis_type, md['identifier'])
