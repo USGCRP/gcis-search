@@ -145,44 +145,31 @@ jQuery(document).ready(function($) {
     search_index: 'elasticsearch',
     facets: [
         {'field':'_type', 'display': 'type'},
+        {'field':'attributes.raw', 'display': 'attributes'},
         {'field':'contributors.organization.name.raw', 'display': 'organization'},
         {'field':'platform_names.raw', 'display': 'platform'},
         {'field':'instrument_names.raw', 'display': 'instrument'},
         {'field':'chapter_identifier.raw', 'display': 'chapter ID'},
         {'field':'href_metadata.chapter.number', 'display': 'chapter number'},
-        {'field':'report_identifier.raw', 'display': 'report'}, 
         {'field':'title.raw', 'display': 'title'},
         {'field':'create_dt', 'display': 'creation date', 'type': 'date'},
-        {'field':'identifier', 'display': 'identifier'}
+        {'field':'report_id.raw', 'display': 'report id'}, 
+        {'field':'report_title.raw', 'display': 'report title'}, 
+        {'field':'contributor_full_name.raw', 'display': 'contributor'}, 
+        {'field':'identifier.raw', 'display': 'identifier'}
     ],
     time_fields: [
         'create_dt',
     ],
 //    location_field: 'location',
     json_fields: [
-        'href_metadata.files'
+        'href_metadata.files',
+        'files'
     ],
-//    filterchoice_result_fields: {
-//        'metadata.version': 'metadata.version',
-//        'metadata.tags': 'metadata.tags.untouched',
-//        'metadata.corrections': 'metadata.corrections.untouched',
-//        'continent': 'continent.untouched',
-//        'city.admin2_name': 'city.admin2_name.untouched',
-//        'city.admin1_name': 'city.admin1_name.untouched',
-//        'city.country_name': 'city.country_name.untouched',
-//        'city.name': 'city.name.untouched',
-//        'metadata.spacecraftName': 'metadata.spacecraftName',
-//        'metadata.direction': 'metadata.direction',
-//        'metadata.lookDirection': 'metadata.lookDirection',
-//        'metadata.orbitNumber': 'metadata.orbitNumber',
-//        'metadata.orbitRepeat': 'metadata.orbitRepeat',
-//        'metadata.trackNumber': 'metadata.trackNumber',
-//        'metadata.beamNumber': 'metadata.beamNumber',
-//        'metadata.latitudeIndexMin': 'metadata.latitudeIndexMin',
-//        'metadata.latitudeIndexMax': 'metadata.latitudeIndexMax',
-//        'metadata.dfdn.ProductType': 'metadata.dfdn.ProductType.untouched',
-//        'metadata.dfas.RequestorUserId': 'metadata.dfas.RequestorUserId.untouched'
-//    },
+    filterchoice_result_fields: {
+        'contributor_full_name': 'contributor_full_name.raw',
+        'attributes': 'attributes.raw'
+    },
     enable_rangeselect: true,
     //enable_locationselect: true,
     paging: {
@@ -250,6 +237,11 @@ jQuery(document).ready(function($) {
           "post": ";\n"
         },
         {
+          "pre": "  imgData = ",
+          "field": "files",
+          "post": ";\n"
+        },
+        {
           "pre": "  var id='",
           "field": "identifier",
           "post": "';\n" +
@@ -272,6 +264,13 @@ jQuery(document).ready(function($) {
                   "    grid.append('<td><span class=\"label label-info\">region</span><div id=\"map_' + id + '\" class=\"map\"></div></td></tr></table>');\n" +
                   "  }\n" +
                   "});<\/script>"
+        }
+      ],
+      [
+        {
+          "pre": "<b>contributors:</b> <font color='blue'>",
+          "field": "contributor_full_name",
+          "post": "</font>"
         }
       ],
       [
