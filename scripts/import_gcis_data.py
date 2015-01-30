@@ -41,6 +41,9 @@ def index_figures(gcis_url, es_url, index):
         report_id = report['identifier']
         r = requests.get("%s/report/%s/figure.json" % (gcis_url, report_id),
                          params={ 'all': 1 })
+        if r.status_code != 200:
+            print("Skipped %s/report/%s/figure.json: %s" % (gcis_url, report_id, r.text))
+            continue
         r.raise_for_status()
         figures = r.json()
         for figure in figures:
@@ -123,6 +126,9 @@ def index_findings(gcis_url, es_url, index):
         report_id = report['identifier']
         r = requests.get("%s/report/%s/finding.json" % (gcis_url, report_id),
                          params={ 'all': 1 })
+        if r.status_code != 200:
+            print("Skipped %s/report/%s/figure.json: %s" % (gcis_url, report_id, r.text))
+            continue
         r.raise_for_status()
         findings = r.json()
         for finding in findings:
@@ -152,6 +158,9 @@ def index_tables(gcis_url, es_url, index):
         report_id = report['identifier']
         r = requests.get("%s/report/%s/table.json" % (gcis_url, report_id),
                          params={ 'all': 1 })
+        if r.status_code != 200:
+            print("Skipped %s/report/%s/figure.json: %s" % (gcis_url, report_id, r.text))
+            continue
         r.raise_for_status()
         tables = r.json()
         for table in tables:
@@ -238,8 +247,41 @@ def index_datasets(gcis_url, es_url, index):
         r = requests.get("%s/%s/%s.json" % (gcis_url, gcis_type, res_id))
         r.raise_for_status()
         md = r.json()
+
+        # add files
         if 'files' in md:
             md.setdefault('href_metadata', {})['files'] = md['files']
+
+        # add GeoJSON if defined (for now only bbox)
+        lat_min = md.get('lat_min', None)
+        lat_max = md.get('lat_max', None)
+        lon_min = md.get('lon_min', None)
+        lon_max = md.get('lon_max', None)
+        if lat_min is not None and lat_max is not None and \
+           lon_min is not None and lon_max is not None:
+            lat_min = float(lat_min)
+            lat_max = float(lat_max)
+            lon_min = float(lon_min)
+            lon_max = float(lon_max)
+            if lon_min == 0. and lon_max == 360.:
+                lon_min = -180.
+                lon_max = 180.
+            if lon_min == -180.: lon_min = -179.9
+            elif lon_min > 180.: lon_min -= 360.
+            if lon_max == 180.: lon_max = 179.9
+            elif lon_max > 180.: lon_max -= 360.
+            if lat_min == -90.: lat_min = -89.9
+            if lat_max == 90.: lat_max = 89.9
+            md['facetview_location'] = {
+                "type": "polygon",
+                "coordinates": [[
+                    [ lon_min, lat_min ],
+                    [ lon_min, lat_max ],
+                    [ lon_max, lat_max ],
+                    [ lon_max, lat_min ],
+                    [ lon_min, lat_min ]
+                ]]
+            }
 
         # split attributes
         if 'attributes' in md and isinstance(md['attributes'], types.StringTypes):

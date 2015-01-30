@@ -38,6 +38,11 @@
         "@version" : {
           "index" : "not_analyzed",
           "type" : "string"
+        },
+        "facetview_location": {
+          "tree": "quadtree", 
+          "type": "geo_shape", 
+          "precision": "1m"
         }
       },
       "_all" : {

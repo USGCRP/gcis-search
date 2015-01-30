@@ -161,7 +161,7 @@ jQuery(document).ready(function($) {
     time_fields: [
         'create_dt',
     ],
-//    location_field: 'location',
+    location_field: 'facetview_location',
     json_fields: [
         'href_metadata.files',
         'files'
@@ -171,7 +171,7 @@ jQuery(document).ready(function($) {
         'attributes': 'attributes.raw'
     },
     enable_rangeselect: true,
-    //enable_locationselect: true,
+    enable_locationselect: true,
     paging: {
       from: 0,
       size: 10
@@ -229,7 +229,8 @@ jQuery(document).ready(function($) {
           "pre": "<table><tr><td><div id='img_grid_",
           "field": "identifier",
           "post": "'></div><script>$(function() {\n" +
-                  "  var imgData = [];\n"
+                  "  var imgData = [];\n" +
+                  "  var coords = [];\n"
         },
         {
           "pre": "  imgData = ",
@@ -242,10 +243,15 @@ jQuery(document).ready(function($) {
           "post": ";\n"
         },
         {
+          "pre": "  coords = [",
+          "field": "facetview_location.coordinates",
+          "post": "];\n"
+        },
+        {
           "pre": "  var id='",
           "field": "identifier",
           "post": "';\n" +
-                  "  if (imgData.length > 0) {\n" +
+                  "  if (imgData.length > 0 || coords.length > 0) {\n" +
                   "    var grid =  $('div[id=\"img_grid_' + id + '\"]');\n" +
                   "    grid.append('<table><tr>');\n" +
                   "    for (var i=0; i<imgData.length; i++) {\n" +
@@ -261,10 +267,100 @@ jQuery(document).ready(function($) {
                   "height=\"250px\" /></a></td>');\n" +
                   "      if (i % 3 == 2) grid.append('</tr><tr>');\n" +
                   "    }\n" +
-                  "    grid.append('<td><span class=\"label label-info\">region</span><div id=\"map_' + id + '\" class=\"map\"></div></td></tr></table>');\n" +
-                  "  }\n" +
+                  "    if (coords.length > 0) {" +
+                  "      grid.append('<td><span class=\"label label-info\">region</span><div id=\"map_' + id + '\" class=\"map\"></div></td>');\n" +
+                  "    }\n" +
+                  "    grid.append('</tr></table>');\n" +
+                  "  }\n"
+        },
+        {
+          "pre": "  var id='",
+          "field": "identifier",
+          "post": "';\n" +
                   "});<\/script>"
         }
+      ],
+      [
+        {
+          "pre": "<script>$(function() { var id = '",
+          "field": "identifier",
+          "post": "';\n"
+        },
+        {
+          "pre": "  var map = L.map('map_' + id," +
+                 " {worldCopyJump: true, center: [0,0], zoom: 0, zoomControl: false});\n" +
+                 "L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {\n" +
+                 "  maxZoom: 18\n" +
+                 "}).addTo(map);\n" +
+                 "var coords = [",
+          "field": "facetview_location.coordinates",
+          "post": "];\n" +
+                  "var coords_geojson = [];\n" +
+                  "for (var i=0; i<coords.length; i++) {\n" +
+                  "  if (i%2 == 0) {\n" +
+                  "    var point = [ coords[i], coords[i+1] ];\n" +
+                  "    coords_geojson.push(point);\n" +
+                  "  }\n" +
+                  "}\n"
+        },
+        {
+          "pre": "var location_type = '",
+          "field": "facetview_location.type",
+          "post": "';\n" +
+                  "if (location_type == 'linestring') {\n" +
+                  "  var geojson_type = 'LineString';\n" +
+                  "}else {\n" +
+                  "  var geojson_type = 'Polygon';\n" +
+                  "  coords_geojson = [ coords_geojson ];\n" +
+                  "}\n" +
+                  "var geojson = {\n" +
+                  "  'type': 'Feature',\n" +
+                  "  'properties': {\n" +
+                  "    'name': 'test name',\n" +
+                  "    'amenity': 'test amenity',\n" +
+                  "    'popupContent': 'This is the popup content'\n" +
+                  "  },\n" +
+                  "  'geometry': {\n" +
+                  "    'type': geojson_type,\n" +
+                  "    'coordinates': coords_geojson\n" +
+                  "  }\n" +
+                  "};\n" +
+                  "L.geoJson(geojson).bindPopup(id).addTo(map);\n" +
+                  "var min_lon = $('#min_lon').val();\n" +
+                  "var max_lon = $('#max_lon').val();\n" +
+                  "var min_lat = $('#min_lat').val();\n" +
+                  "var max_lat = $('#max_lat').val();\n" +
+                  'if (!(min_lon == "-180" && max_lon == "180" && min_lat == "-90" && max_lat == "90")) {\n' +
+                  "  var bbox_north = parseFloat(max_lat);\n" +
+                  "  var bbox_south = parseFloat(min_lat);\n" +
+                  "  var bbox_east = parseFloat(max_lon);\n" +
+                  "  var bbox_west = parseFloat(min_lon);\n" +
+                  "  L.polygon([\n" +
+                  "      [ bbox_south, bbox_west ],\n" +
+                  "      [ bbox_north, bbox_west ],\n" +
+                  "      [ bbox_north, bbox_east ],\n" +
+                  "      [ bbox_south, bbox_east ]\n" +
+                  "    ], {\n" +
+                  "      stroke: true,\n" +
+                  "      color: '#f06eaa',\n" +
+                  "      weight: 4,\n" +
+                  "      opacity: 0.5,\n" +
+                  "      fill: true,\n" +
+                  "      fillColor: null, //same as color by default\n" +
+                  "      fillOpacity: 0.2,\n" +
+                  "      clickable: true\n" +
+                  "  }).bindPopup('search bbox').addTo(map);\n" +
+                  "}\n" +
+                  "var center = [0, 0];" +
+                  "map.setView([center[1], center[0]], 0);\n"
+        },
+        {
+          "pre": "var id = '",
+          "field": "identifier",
+          "post": "';\n" +
+                  "});\n" +
+                  "<\/script>"
+        },
       ],
       [
         {
