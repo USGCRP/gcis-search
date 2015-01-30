@@ -325,7 +325,20 @@ jQuery(document).ready(function($) {
                   "    'coordinates': coords_geojson\n" +
                   "  }\n" +
                   "};\n" +
-                  "L.geoJson(geojson).bindPopup(id).addTo(map);\n" +
+                  "var wrap_lon = null;\n" +
+                  "if (coords_geojson[0][0][0] > coords_geojson[0][2][0])\n" +
+                  "  wrap_lon = coords_geojson[0][2][0];\n" +
+                  "L.geoJson(geojson, {\n" +
+                  "  coordsToLatLng: function (coords) {\n" +
+                  "    longitude = coords[0];\n" +
+                  "    latitude = coords[1];\n" +
+                  "    var latlng = L.latLng(latitude, longitude);\n" +
+                  "    if (wrap_lon !== null && longitude == wrap_lon) {\n" +
+                  "      return latlng.wrap(360, 0);\n" +
+                  "    } else\n" +
+                  "      return latlng.wrap();\n" +
+                  "  }\n" +
+                  "}).bindPopup(id).addTo(map);\n" +
                   "var min_lon = $('#min_lon').val();\n" +
                   "var max_lon = $('#max_lon').val();\n" +
                   "var min_lat = $('#min_lat').val();\n" +
