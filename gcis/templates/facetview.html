@@ -164,6 +164,7 @@ jQuery(document).ready(function($) {
     location_field: 'facetview_location',
     json_fields: [
         'href_metadata.files',
+        'href_metadata.chapter',
         'files'
     ],
     filterchoice_result_fields: {
@@ -421,6 +422,20 @@ jQuery(document).ready(function($) {
         {
           "pre": "<b>statement:</b><br/>",
           "field": "statement",
+          "post": ""
+        }
+      ],
+      [
+        {
+          "pre": "<b>chapter ID:</b><br/>",
+          "field": "chapter_identifier",
+          "post": ""
+        }
+      ],
+      [
+        {
+          "pre": "<b>chapter number:</b><br/>",
+          "field": "href_metadata.chapter",
           "post": ""
         }
       ],
