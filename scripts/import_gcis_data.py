@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 import os, json, requests, types
+import requests_cache
 from pyes import ES
 
 from gcis import create_app
+
+
+requests_cache.install_cache('gcis-import')
 
 
 def get_es_conn(es_url, index):
@@ -287,7 +291,12 @@ def index_datasets(gcis_url, es_url, index):
         if 'attributes' in md and isinstance(md['attributes'], types.StringTypes):
             md['attributes'] = [ i.strip() for i in md['attributes'].split(',')]
  
-        conn.index(md, index, gcis_type, md['identifier'])
+        try: conn.index(md, index, gcis_type, md['identifier'])
+        except Exception, e:
+            print("Got error: %s" % str(e))
+            with open('errors/%s.json' % md['identifier'], 'w') as f:
+                json.dump(md, f, indent=2)
+            continue
 
 
 if __name__ == "__main__":
