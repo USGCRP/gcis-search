@@ -489,9 +489,19 @@ jQuery(document).ready(function($) {
       ],
       [
         {
-          "pre": "<div id='newsearch_lineage_",
+          "pre": "<table id='tbl_lineage_",
           "field": "identifier",
-          "post": "'><a class='btn btn-success'>Lineage</a></div><script>$(function() {\n" +
+          "post": "'><tr>"
+        },
+        {
+          "pre": "<td><div id='newsearch_lineage_",
+          "field": "identifier",
+          "post": "'><a target='_blank' class='btn btn-success'>Search Lineage</a></div><td>\n"
+        },
+        {
+          "pre": "<td><div id='visualize_lineage_",
+          "field": "identifier",
+          "post": "'><a class='btn btn-primary'>Viz Lineage</a></div></td></tr></table><script>$(function() {\n" +
                   "var lineage_figures = [];\n" +
                   "var lineage_tables = [];\n" + 
                   "var lineage_chapters = [];\n" + 
@@ -518,13 +528,18 @@ jQuery(document).ready(function($) {
           "post": "'];\n"
         },
         {
-          "pre": "var ns_div = $(jq('newsearch_lineage_",
+          "pre": "var id = '",
           "field": "identifier",
-          "post": "'));\n" +
+          "post": "';\n" +
+                  "var tbl = $(jq('tbl_lineage_' + id));\n" +
+                  "var ns_div = $(jq('newsearch_lineage_' + id));\n" +
+                  "var viz_div = $(jq('visualize_lineage_' + id));\n" +
                   "$(ns_div).next('br').remove();\n" +
-                  "var link = $(ns_div).find('a');\n" +
+                  "$(viz_div).next('br').remove();\n" +
+                  "var ns_link = $(ns_div).find('a');\n" +
+                  "var viz_link = $(viz_div).find('a');\n" +
                   "if (lineage_figures.length == 0 && lineage_tables.length == 0) {\n" +
-                  "  $(ns_div).remove();\n" +
+                  "  $(tbl).remove();\n" +
                   "}else {\n" +
                   "  var query_str = '';\n" +
                   "  var query_num = 0;\n" +
@@ -553,7 +568,7 @@ jQuery(document).ready(function($) {
                   '    }\n' +
                   "  }\n" +
                   '  var query = { "query": { "query_string": { "query": query_str } } };\n' +
-                  '  link.attr("href", \'?source=\' + JSON.stringify(query, null, \'\'));\n' +
+                  '  ns_link.attr("href", \'?source=\' + JSON.stringify(query, null, \'\'));\n' +
                   "}\n" +
                   "});<\/script>"
         },
