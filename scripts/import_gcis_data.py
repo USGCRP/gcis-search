@@ -57,7 +57,7 @@ def index_chapters(gcis_url, es_url, index):
                 r = requests.get(chapter['href'])
                 r.raise_for_status()
                 chapter['href_metadata'] = r.json()
-            chapter['report_identifier'] = { 'report_identifier': chapter['href_metadata']['report_identifier'] }
+            chapter['report_identifier'] = chapter['href_metadata']['report_identifier']
             conn.index(chapter, index, 'chapter', chapter['identifier'])
 
 
