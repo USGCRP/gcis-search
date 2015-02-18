@@ -130,6 +130,10 @@
 
   <script type="text/javascript">
 
+function jq( myid ) {
+  return "#" + myid.replace( /(:|\.|\[|\])/g, "\\$1" );
+}
+
 function set_left_margin() {
   return ($(window).width() - $(this).width())/2;
 }
@@ -150,8 +154,9 @@ jQuery(document).ready(function($) {
         {'field':'platform_names.raw', 'display': 'platform'},
         {'field':'instrument_names.raw', 'display': 'instrument'},
         {'field':'chapter_identifier.raw', 'display': 'chapter ID'},
-        {'field':'href_metadata.chapter.number', 'display': 'chapter number'},
+        {'field':'chapter.number', 'display': 'chapter number'},
         {'field':'title.raw', 'display': 'title'},
+        {'field':'publication_year', 'display': 'publication year'},
         {'field':'create_dt', 'display': 'creation date', 'type': 'date'},
         {'field':'report_id.raw', 'display': 'report id'}, 
         {'field':'report_title.raw', 'display': 'report title'}, 
@@ -159,17 +164,21 @@ jQuery(document).ready(function($) {
         {'field':'identifier.raw', 'display': 'identifier'}
     ],
     time_fields: [
-        'create_dt',
+        'create_dt'
     ],
     location_field: 'facetview_location',
     json_fields: [
+        'lineage_figures',
+        'lineage_tables',
         'href_metadata.files',
-        'href_metadata.chapter',
         'files'
     ],
     filterchoice_result_fields: {
         'contributor_full_name': 'contributor_full_name.raw',
-        'attributes': 'attributes.raw'
+        'attributes': 'attributes.raw',
+        'chapter_identifier': 'chapter_identifier.raw',
+        'chapter.number': 'chapter.number',
+        'publication_year': 'publication_year'
     },
     enable_rangeselect: true,
     enable_locationselect: true,
@@ -257,7 +266,11 @@ jQuery(document).ready(function($) {
                   "    grid.append('<table><tr>');\n" +
                   "    for (var i=0; i<imgData.length; i++) {\n" +
                   "      var img_url = imgData[i].href;\n" +
-                  "      var small_img_url = imgData[i].href;\n" +
+                  "      if (imgData[i].thumbnail_href) {\n" +
+                  "        var small_img_url = imgData[i].thumbnail_href;\n" +
+                  "      }else {\n" +
+                  "        var small_img_url = imgData[i].href;\n" +
+                  "      }\n" +
                   "      var tooltip = '';\n" +
                   "      if (typeof imgData[i].tooltip == 'string' || imgData[i].tooltip instanceof String) {\n" +
                   "        if (imgData[i].tooltip.length > 0) \n" +
@@ -385,73 +398,165 @@ jQuery(document).ready(function($) {
       ],
       [
         {
-          "pre": "<b>description:</b><br/>",
+          "pre": "<b>description:</b> ",
           "field": "description",
           "post": ""
         }
       ],
       [
         {
-          "pre": "<b>platforms:</b><br/>",
+          "pre": "<b>summary:</b> ",
+          "field": "summary",
+          "post": ""
+        }
+      ],
+      [
+        {
+          "pre": "<b>publication year:</b> ",
+          "field": "publication_year",
+          "post": ""
+        }
+      ],
+      [
+        {
+          "pre": "<b>platforms:</b> ",
           "field": "platform_names",
           "post": ""
         }
       ],
       [
         {
-          "pre": "<b>instruments:</b><br/>",
+          "pre": "<b>instruments:</b> ",
           "field": "instrument_names",
           "post": ""
         }
       ],
       [
         {
-          "pre": "<b>attributes:</b><br/>",
+          "pre": "<b>attributes:</b> ",
           "field": "attributes",
           "post": ""
         }
       ],
       [
         {
-          "pre": "<b>caption:</b><br/>",
+          "pre": "<b>caption:</b> ",
           "field": "caption",
           "post": ""
         }
       ],
       [
         {
-          "pre": "<b>statement:</b><br/>",
+          "pre": "<b>statement:</b> ",
           "field": "statement",
           "post": ""
         }
       ],
       [
         {
-          "pre": "<b>chapter ID:</b><br/>",
+          "pre": "<b>chapter ID:</b> ",
           "field": "chapter_identifier",
           "post": ""
         }
       ],
       [
         {
-          "pre": "<b>chapter number:</b><br/>",
-          "field": "href_metadata.chapter",
+          "pre": "<b>chapter number:</b> ",
+          "field": "chapter.number",
           "post": ""
         }
       ],
       [
         {
-          "pre": "<b>html:</b><br/>http://data.globalchange.gov",
+          "pre": "<b>ordinal:</b> <font color='blue'>",
+          "field": "ordinal_abs",
+          "post": "</font>"
+        }
+      ],
+      [
+        {
+          "pre": "<b>html:</b> http://data.globalchange.gov",
           "field": "uri",
           "post": ""
         }
       ],
       [
         {
-          "pre": "<b>json:</b><br/>",
+          "pre": "<b>json:</b> ",
           "field": "href",
           "post": ""
         }
+      ],
+      [
+        {
+          "pre": "<div id='newsearch_lineage_",
+          "field": "identifier",
+          "post": "'><a class='btn btn-success'>Lineage</a></div><script>$(function() {\n" +
+                  "var lineage_figures = [];\n" +
+                  "var lineage_tables = [];\n" + 
+                  "var lineage_chapters = [];\n" + 
+                  "var lineage_reports = [];\n"
+        },
+        {
+          "pre": "lineage_figures = ",
+          "field": "lineage_figures",
+          "post": ";\n"
+        },
+        {
+          "pre": "lineage_tables = ",
+          "field": "lineage_tables",
+          "post": ";\n"
+        },
+        {
+          "pre": "lineage_chapters = ['",
+          "field": "chapter.identifier",
+          "post": "'];\n"
+        },
+        {
+          "pre": "lineage_reports = ['",
+          "field": "chapter.report_identifier",
+          "post": "'];\n"
+        },
+        {
+          "pre": "var ns_div = $(jq('newsearch_lineage_",
+          "field": "identifier",
+          "post": "'));\n" +
+                  "$(ns_div).next('br').remove();\n" +
+                  "var link = $(ns_div).find('a');\n" +
+                  "if (lineage_figures.length == 0 && lineage_tables.length == 0) {\n" +
+                  "  $(ns_div).remove();\n" +
+                  "}else {\n" +
+                  "  var query_str = '';\n" +
+                  "  var query_num = 0;\n" +
+                  "  if (lineage_figures.length > 0) {\n" +
+                  "    for (var i=0; i < lineage_figures.length; i++) {\n" +
+                  "      if (query_num > 0) query_str += ' OR ';\n" +
+                  "      query_str += 'lineage_figures:' + lineage_figures[i];\n" +
+                  "      query_str += ' OR (_type:figure AND ordinal_abs:' + lineage_figures[i] + ')';\n" +
+                  "      query_num += 1;\n" +
+                  '    }\n' +
+                  "  }\n" +
+                  "  if (lineage_tables.length > 0) {\n" +
+                  "    for (var i=0; i < lineage_tables.length; i++) {\n" +
+                  "      if (query_num > 0) query_str += ' OR ';\n" +
+                  "      query_str += 'lineage_tables:' + lineage_tables[i];\n" +
+                  "      query_str += ' OR (_type:table AND ordinal_abs:' + lineage_table[i] + ')';\n" +
+                  "      query_num += 1;\n" +
+                  '    }\n' +
+                  "  }\n" +
+                  "  if (lineage_chapters.length > 0) {\n" +
+                  "    for (var i=0; i < lineage_chapters.length; i++) {\n" +
+                  "      if (query_num > 0) query_str += ' OR ';\n" +
+                  "      query_str += '(_type:report AND identifier:' + lineage_reports[i] + ')';\n" +
+                  "      query_str += ' OR (_type:chapter AND report_identifier:' + lineage_reports[i] + ' AND identifier:' + lineage_chapters[i] + ')';\n" +
+                  "      query_num += 1;\n" +
+                  '    }\n' +
+                  "  }\n" +
+                  '  var query = { "query": { "query_string": { "query": query_str } } };\n' +
+                  '  link.attr("href", \'?source=\' + JSON.stringify(query, null, \'\'));\n' +
+                  "}\n" +
+                  "});<\/script>"
+        },
       ]
     ]
   });

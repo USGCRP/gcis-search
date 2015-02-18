@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, json, requests, types
+import os, json, requests, types, re
 import requests_cache
 from pyes import ES
 
@@ -7,6 +7,10 @@ from gcis import create_app
 
 
 requests_cache.install_cache('gcis-import')
+
+
+FIGURES_RE = re.compile(r'\(figure(?:s)?\s+(\d+\.\d+)(?:\s+and\s+(\d+.\d+))?', re.I)
+TABLES_RE = re.compile(r'\(table(?:s)?\s+(\d+\.\d+)(?:\s+and\s+(\d+.\d+))?', re.I)
 
 
 def get_es_conn(es_url, index):
@@ -29,6 +33,32 @@ def index_reports(gcis_url, es_url, index):
         report['report_id'] = report['identifier']
         report['report_title'] = report['title']
         conn.index(report, index, 'report', report['identifier'])
+
+
+def index_chapters(gcis_url, es_url, index):
+    """Index GCIS chapters into ElasticSearch."""
+
+    conn = get_es_conn(es_url, index)
+    r = requests.get("%s/report.json" % gcis_url, params={ 'all': 1 })
+    r.raise_for_status()
+    reports = r.json()
+    for report in reports:
+        report_id = report['identifier']
+        r = requests.get("%s/report/%s/chapter.json" % (gcis_url, report_id),
+                         params={ 'all': 1 })
+        if r.status_code != 200:
+            print("Skipped %s/report/%s/chapter.json: %s" % (gcis_url, report_id, r.text))
+            continue
+        r.raise_for_status()
+        chapters = r.json()
+        for chapter in chapters:
+            chapter['chapter'] = { 'number': chapter['number'] }
+            if 'href' in chapter:
+                r = requests.get(chapter['href'])
+                r.raise_for_status()
+                chapter['href_metadata'] = r.json()
+            chapter['report_identifier'] = { 'report_identifier': chapter['href_metadata']['report_identifier'] }
+            conn.index(chapter, index, 'chapter', chapter['identifier'])
 
 
 def index_figures(gcis_url, es_url, index):
@@ -74,6 +104,12 @@ def index_figures(gcis_url, es_url, index):
                             person_info['identifier'] = person_info['contributor_full_name']
                             contributor_full_names.append(person_info['contributor_full_name'])
                             conn.index(person_info, index, 'person', person_id)
+
+                # index chapter
+                if 'chapter' in figure['href_metadata']:
+                    figure['chapter'] = figure['href_metadata']['chapter']
+                    if 'ordinal' in figure:
+                        figure['ordinal_abs'] = "%s.%s" % (figure['chapter']['number'], figure['ordinal'])
 
                 # index images
                 if 'images' in figure['href_metadata']:
@@ -148,6 +184,33 @@ def index_findings(gcis_url, es_url, index):
             if 'attributes' in finding and isinstance(finding['attributes'], types.StringTypes):
                 finding['attributes'] = [ i.strip() for i in finding['attributes'].split(',')]
  
+            # index chapter
+            if 'chapter' in finding['href_metadata']:
+                finding['chapter'] = finding['href_metadata']['chapter']
+                if 'ordinal' in finding:
+                    finding['ordinal_abs'] = "%s.%s" % (finding['chapter']['number'], finding['ordinal'])
+
+            # try to scrape for mention of figures and tables from evidence
+            if 'evidence' in finding and finding['evidence'] is not None:
+
+                # scrape figures
+                matches = FIGURES_RE.findall(finding['evidence'])
+                finding['lineage_figures'] = []
+                for match1, match2 in matches:
+                    #print("Got matches: %s %s" % (match1, match2))
+                    finding['lineage_figures'].append(match1)
+                    if match2 is not None and match2 != "":
+                        finding['lineage_figures'].append(match2)
+
+                # scrape tables
+                matches = TABLES_RE.findall(finding['evidence'])
+                finding['lineage_tables'] = []
+                for match1, match2 in matches:
+                    #print("Got matches: %s %s" % (match1, match2))
+                    finding['lineage_tables'].append(match1)
+                    if match2 is not None and match2 != "":
+                        finding['lineage_tables'].append(match2)
+
             conn.index(finding, index, 'finding', finding['identifier'])
 
 
@@ -175,6 +238,13 @@ def index_tables(gcis_url, es_url, index):
                 table['href_metadata'] = r.json()
             table['report_id'] = report_id
             table['report_title'] = report['title']
+
+            # index chapter
+            if 'chapter' in table['href_metadata']:
+                table['chapter'] = table['href_metadata']['chapter']
+                if 'ordinal' in table:
+                    table['ordinal_abs'] = "%s.%s" % (table['chapter']['number'], table['ordinal'])
+
             conn.index(table, index, 'table', table['identifier'])
 
 
@@ -307,6 +377,7 @@ if __name__ == "__main__":
     index = app.config['GCIS_ELASTICSEARCH_INDEX']
 
     index_reports(gcis_url, es_url, index)
+    index_chapters(gcis_url, es_url, index)
     index_figures(gcis_url, es_url, index)
     index_findings(gcis_url, es_url, index)
     index_tables(gcis_url, es_url, index)
