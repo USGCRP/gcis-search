@@ -140,7 +140,7 @@ def get_image_prov(j, gcis_url):
 def index_gcis(gcis_url, es_url, index, alias):
     """Index GCIS into PROV-ES ElasticSearch index."""
 
-    conn = get_es_conn(es_url, index)
+    conn = get_es_conn(es_url, index, alias)
     r = requests.get('%s/image.json' % gcis_url, params={ 'all': 1 })
     r.raise_for_status()
     imgs = r.json()
