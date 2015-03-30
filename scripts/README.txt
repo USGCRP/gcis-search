@@ -1,9 +1,3 @@
-Install template
-================
-
-./install_es_template.sh http://localhost:5001 prov_es ../config/es_template-prov_es.json
-
-
 Import prov_es from GRQ
 =======================
 ops:
