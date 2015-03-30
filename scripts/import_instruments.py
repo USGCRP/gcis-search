@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os, sys, json, requests, copy, hashlib, re, csv
 from datetime import datetime
-from pyes import ES
+from pyes import ES, TermQuery
 
 from fv_prov_es import create_app
 
@@ -27,8 +27,18 @@ def parse_csv(file):
     return instrs
 
 
-def import_instruments(instrs, es_url, index):
+def import_instruments(instrs, es_url, index, alias):
     """Create JSON ES docs and import."""
+
+    prefix = {
+        "bibo": "http://purl.org/ontology/bibo/",
+        "dcterms": "http://purl.org/dc/terms/",
+        "eos": "http://nasa.gov/eos.owl#",
+        "gcis": "http://data.globalchange.gov/gcis.owl#",
+        "hysds": "http://hysds.jpl.nasa.gov/hysds/0.1#",
+        "info": "http://info-uri.info/",
+        "xlink": "http://www.w3.org/1999/xlink"
+    }
 
     conn = ES(es_url)
     if not conn.indices.exists_index(index):
@@ -62,23 +72,45 @@ def import_instruments(instrs, es_url, index):
             org = "eos:%s" % instr['Instrument Agencies']
             if org not in orgs:
                orgs[org] = {
+                   "prov_es_json": {
+                       "prefix": prefix,
+                       "agent": {
+                           org: {
+                               "prov:type": {
+                                   "type": "prov:QualifiedName",
+                                   "$": "prov:Organization",
+                               },
+                           },
+                       },
+                   },
                    "identifier": org,
                    "prov:type": "prov:Organization",
-                   "id": hashlib.md5(org).hexdigest(),
-                   "prov:concept": "prov:Organization",
                }
-               conn.index(orgs[org], index, 'agent', orgs[org]['id'])
+               if len(conn.search(query=TermQuery("_id", org),
+                                  indices=[alias])) > 0: pass
+               else: conn.index(orgs[org], index, 'agent', org)
         else: org = None
         doc = {
+            "prov_es_json": {
+                "prefix": prefix,
+                "entity": {
+                    identifier: {
+                        "gcis:hasSensor": sensor,
+                        "gcis:inPlatform": platform,
+                        "prov:type": "eos:instrument",
+                        "gcis:hasGoverningOrganization": org,
+                    },
+                },
+            },
             "gcis:hasSensor": sensor,
             "gcis:inPlatform": platform,
-            "prov:concept": "prov:Entity",
             "prov:type": "eos:instrument",
             "gcis:hasGoverningOrganization": org,
             "identifier": identifier,
-            "id": id,
         }
-        conn.index(doc, index, 'entity', doc['id'])
+        if len(conn.search(query=TermQuery("_id", identifier),
+                           indices=[alias])) > 0: pass
+        else: conn.index(doc, index, 'entity', identifier)
 
 
 if __name__ == "__main__":
@@ -88,5 +120,6 @@ if __name__ == "__main__":
     dt = datetime.utcnow()
     index = "%s-%04d.%02d.%02d" % (app.config['PROVES_ES_PREFIX'],
                                    dt.year, dt.month, dt.day) 
+    alias = app.config['PROVES_ES_ALIAS']
     #print(json.dumps(j, indent=2, sort_keys=True))
-    import_instruments(j, app.config['ES_URL'], index)
+    import_instruments(j, app.config['ES_URL'], index, alias)
