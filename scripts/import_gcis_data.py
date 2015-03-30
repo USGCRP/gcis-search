@@ -137,10 +137,10 @@ def get_image_prov(j, gcis_url):
     return prov_json
 
 
-def index_gcis(gcis_url, es_url, index, alias):
+def index_gcis(gcis_url, es_url, index):
     """Index GCIS into PROV-ES ElasticSearch index."""
 
-    conn = get_es_conn(es_url, index, alias)
+    conn = get_es_conn(es_url, index)
     r = requests.get('%s/image.json' % gcis_url, params={ 'all': 1 })
     r.raise_for_status()
     imgs = r.json()
@@ -162,10 +162,9 @@ if __name__ == "__main__":
     env = os.environ.get('PROVES_ENV', 'prod')
     app = create_app('fv_prov_es.settings.%sConfig' % env.capitalize(), env=env)
     es_url = app.config['ES_URL']
-    gcis_url =  app.config['GCIS_REST_URL']
+    gcis_url =  "http://data.globalchange.gov"
     dt = datetime.utcnow()
     index = "%s-%04d.%02d.%02d" % (app.config['PROVES_ES_PREFIX'],
                                    dt.year, dt.month, dt.day)
-    alias = app.config['PROVES_ES_ALIAS']
 
-    index_gcis(gcis_url, es_url, index, alias)
+    index_gcis(gcis_url, es_url, index)
