@@ -1,5 +1,5 @@
 import os, sys, json, requests, copy, types
-from pyes import ES
+from pyes import ES, TermQuery
 from flask import current_app
 
 from prov_es.model import get_uuid
@@ -27,7 +27,7 @@ def fix_hadMember_ids(prov_es_json):
         del prov_es_json['hadMember'][id]
 
 
-def import_prov(conn, index, prov_es_json):
+def import_prov(conn, index, alias, prov_es_json):
     """Index PROV-ES concepts into ElasticSearch."""
 
     # fix hadMember ids
@@ -40,6 +40,8 @@ def import_prov(conn, index, prov_es_json):
         if concept == 'prefix': continue
         elif concept == 'bundle':
             for bundle_id in prov_es_json['bundle']:
+                if len(conn.search(query=TermQuery("_id", bundle_id),
+                                   indices=[alias])) > 0: continue
                 bundle_prov = copy.deepcopy(prov_es_json['bundle'][bundle_id])
                 bundle_prov['prefix'] = prefix
                 bundle_doc = {
@@ -50,6 +52,8 @@ def import_prov(conn, index, prov_es_json):
                     if b_concept == 'prefix': continue
                     bundle_doc[b_concept] = []
                     for i in bundle_prov[b_concept]:
+                        if len(conn.search(query=TermQuery("_id", i),
+                                           indices=[alias])) > 0: continue
                         doc = copy.deepcopy(bundle_prov[b_concept][i])
                         prov_doc = copy.deepcopy(doc)
                         doc['identifier'] =  i
@@ -62,6 +66,8 @@ def import_prov(conn, index, prov_es_json):
                 conn.index(bundle_doc, index, 'bundle', bundle_id)
         else:
             for i in prov_es_json[concept]:
+                if len(conn.search(query=TermQuery("_id", i),
+                                   indices=[alias])) > 0: continue
                 doc = prov_es_json[concept][i]
                 prov_doc = copy.deepcopy(doc)
                 doc['identifier'] =  i

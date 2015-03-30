@@ -137,7 +137,7 @@ def get_image_prov(j, gcis_url):
     return prov_json
 
 
-def index_gcis(gcis_url, es_url, index):
+def index_gcis(gcis_url, es_url, index, alias):
     """Index GCIS into PROV-ES ElasticSearch index."""
 
     conn = get_es_conn(es_url, index)
@@ -155,7 +155,7 @@ def index_gcis(gcis_url, es_url, index):
         #print(json.dumps(img_md, indent=2))
         prov = get_image_prov(img_md, gcis_url)
         #print(json.dumps(prov, indent=2))
-        import_prov(conn, index, prov)
+        import_prov(conn, index, alias, prov)
 
 
 if __name__ == "__main__":
@@ -166,5 +166,5 @@ if __name__ == "__main__":
     dt = datetime.utcnow()
     index = "%s-%04d.%02d.%02d" % (app.config['PROVES_ES_PREFIX'],
                                    dt.year, dt.month, dt.day)
-
-    index_gcis(gcis_url, es_url, index)
+    alias = app.config['PROVES_ES_ALIAS']
+    index_gcis(gcis_url, es_url, index, alias)

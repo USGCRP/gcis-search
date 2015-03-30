@@ -307,7 +307,7 @@ class ImportProvEs(Resource):
                                           dt.year, dt.month, dt.day)
         alias = current_app.config['PROVES_ES_ALIAS']
         conn = get_es_conn(es_url, es_index, alias)
-        try: import_prov(conn, es_index, pej)
+        try: import_prov(conn, es_index, alias, pej)
         except Exception, e:
             message = "Failed to import PROV-ES json. Check that your PROV-ES JSON conforms to PROV-JSON."
             current_app.logger.debug(message)
