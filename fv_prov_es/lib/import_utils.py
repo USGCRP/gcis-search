@@ -52,8 +52,6 @@ def import_prov(conn, index, alias, prov_es_json):
                     if b_concept == 'prefix': continue
                     bundle_doc[b_concept] = []
                     for i in bundle_prov[b_concept]:
-                        if len(conn.search(query=TermQuery("_id", i),
-                                           indices=[alias])) > 0: continue
                         doc = copy.deepcopy(bundle_prov[b_concept][i])
                         prov_doc = copy.deepcopy(doc)
                         doc['identifier'] =  i
@@ -61,7 +59,9 @@ def import_prov(conn, index, alias, prov_es_json):
                         doc['prov_es_json'].setdefault(b_concept, {})[i] = prov_doc
                         if 'prov:type' in doc and isinstance(doc['prov:type'], types.DictType):
                             doc['prov:type'] = doc['prov:type'].get('$', '')
-                        conn.index(doc, index, b_concept, i)
+                        if len(conn.search(query=TermQuery("_id", i),
+                                           indices=[alias])) > 0: pass
+                        else: conn.index(doc, index, b_concept, i)
                         bundle_doc[b_concept].append(i)
                 conn.index(bundle_doc, index, 'bundle', bundle_id)
         else:
