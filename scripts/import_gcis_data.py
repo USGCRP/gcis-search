@@ -114,8 +114,8 @@ def get_image_prov(j, gcis_url):
         if len(agent_ids) > 0:
             attrs.append(( "prov:wasAssociatedWith", agent_ids[0] ))
         act = doc.activity(act_id, start_time, end_time, attrs)
-        doc.used(act, input_id, start_time, "hysds:%s" % get_uuid("%s:%s" % (act_id, input_id)))
-        doc.wasGeneratedBy(img_id, act, end_time, "hysds:%s" % get_uuid("%s:%s" % (img_id, act_id)))
+        doc.used(act, input_id, start_time, "gcis:%s" % get_uuid("%s:%s" % (act_id, input_id)))
+        doc.wasGeneratedBy(img_id, act, end_time, "gcis:%s" % get_uuid("%s:%s" % (img_id, act_id)))
            
     # serialize
     prov_json = json.loads(doc.serialize())
