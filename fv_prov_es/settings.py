@@ -3,7 +3,7 @@ class Config(object):
     ES_URL = 'http://127.0.0.1:9200'
 
     # for PROVES app
-    PROVES_ES_PREFIX = 'prov_es-'
+    PROVES_ES_PREFIX = 'prov_es'
     PROVES_ES_ALIAS = 'prov_es'
 
     # ES template
@@ -29,4 +29,4 @@ class DevConfig(Config):
     WTF_CSRF_ENABLED = False
 
     # for PROVES app
-    PROVES_ES_PREFIX = 'prov_es_dev-'
+    PROVES_ES_PREFIX = 'prov_es_dev'
