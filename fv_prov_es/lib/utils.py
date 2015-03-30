@@ -72,8 +72,8 @@ def get_prov_es_json(id):
     """Get PROV-ES document by ID."""
 
     # query
-    es_url = current_app.config['ELASTICSEARCH_URL']
-    es_index = current_app.config['PROVES_ELASTICSEARCH_ALIAS']
+    es_url = current_app.config['ES_URL']
+    es_index = current_app.config['PROVES_ES_ALIAS']
     query = { 'query': { 'term': { '_id': id } } }
     #current_app.logger.debug("ES query for query(): %s" % json.dumps(query, indent=2))
     r = requests.post('%s/%s/_search' % (es_url, es_index), data=json.dumps(query))
