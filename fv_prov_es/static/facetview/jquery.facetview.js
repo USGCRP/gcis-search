@@ -977,6 +977,133 @@ search box - the end user will not know they are happening.
             var data = parseresults(sdata);
             options.data = data;
             
+            // initialize fdl plot
+            if (svg !== null) {
+                nodes = [];
+                nodesDict = {};
+                links = [];
+                linksDict = {};
+                allGroup.remove();
+                allGroup = null;
+                pathGroup.remove();
+                pathGroup = null;
+                agentGroup.remove();
+                agentGroup = null;
+                nodeTextGroup.remove();
+                nodeTextGroup = null;
+                pathTextGroup.remove();
+                pathTextGroup = null;
+                entsGroup.remove();
+                entsGroup = null;
+                actsGroup.remove();
+                actsGroup = null;
+                $('#chart').empty();
+                svg = null;
+            }
+
+            tip = d3.tip()
+                .attr('class', 'd3-tip')
+                .offset([100, 0])
+                .direction('e')
+                .html(function(d) {
+                  if (d.doc === undefined || d.doc === null)
+                    return '<strong>(' + d.concept + ')</strong><br/><pre style="color:#0088CC;font-size:10px;">No JSON to show.</pre>';
+                  var json_str = JSON.stringify(d.doc, null, '  ');
+                  var title = get_text(d);
+                  return '<strong>' + title + '</strong><br/><pre style="color:#0088CC;font-size:10px;">' + json_str + '</pre>';
+                });
+
+            force = d3.layout.force()
+                .nodes(nodes)
+                .links(links)
+                .linkDistance(150)
+                .charge(-500)
+                .on("tick", tick);
+          
+            svg = d3.select("#chart").append("svg");
+            svg.call(tip);
+
+            // Per-type markers, as they don't inherit styles.
+            defs = svg.append("defs");
+
+            // customize marker for used paths
+            defs.append("marker")
+                .attr("id", "used")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", rectLength - 1)
+                .attr("refY", 0) //-1)
+                .attr("markerWidth", markerLength)
+                .attr("markerHeight", markerLength)
+                .attr("orient", "auto")
+              .append("path")
+                .attr("d", "M0,-5L10,0L0,5");
+            
+            // customize marker for wasGenerated paths
+            defs.append("marker")
+                .attr("id", "wasGeneratedBy")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", radiusLength + markerLength)
+                .attr("refY", 0) //-1)
+                .attr("markerWidth", markerLength)
+                .attr("markerHeight", markerLength)
+                .attr("orient", "auto")
+              .append("path")
+                .attr("d", "M0,-5L10,0L0,5");
+            
+            // customize marker for associated paths
+            defs.append("marker")
+                .attr("id", "associated")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", radiusLength + markerLength)
+                .attr("refY", -1)
+                .attr("markerWidth", markerLength)
+                .attr("markerHeight", markerLength)
+                .attr("orient", "auto")
+              .append("path")
+                .attr("d", "M0,-5L10,0L0,5");
+                
+            // customize marker for controlled paths
+            defs.append("marker")
+                .attr("id", "controlled")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", radiusLength + markerLength)
+                .attr("refY", -2.5)
+                .attr("markerWidth", markerLength)
+                .attr("markerHeight", markerLength)
+                .attr("orient", "auto")
+              .append("path")
+                .attr("d", "M0,-5L10,0L0,5");
+                
+            // customize marker for entity to entity related paths
+            defs.append("marker")
+                .attr("id", "e2e_related")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", rectLength - 1)
+                .attr("refY", 0) //-1)
+                .attr("markerWidth", markerLength)
+                .attr("markerHeight", markerLength)
+                .attr("orient", "auto")
+              .append("path")
+                .attr("d", "M0,-5L10,0L0,5");
+                
+            // customize marker for activity to entity related paths
+            defs.append("marker")
+                .attr("id", "a2e_related")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", rectLength - 1)
+                .attr("refY", 0) //-1)
+                .attr("markerWidth", markerLength)
+                .attr("markerHeight", markerLength)
+                .attr("orient", "auto")
+              .append("path")
+                .attr("d", "M0,-5L10,0L0,5");
+                
+            // add def for info node
+            defs.append("rect")
+                .attr("id", "info")
+                .attr("width", rectLength)
+                .attr("height", rectLength);
+
             // for each filter setup, find the results for it and append them to the relevant filter
             for ( var each = 0; each < options.facets.length; each++ ) {
                 var facet = options.facets[each]['field'];
@@ -1081,6 +1208,9 @@ search box - the end user will not know they are happening.
                 // write them out to the results div
                  $('#facetview_results', obj).append( buildrecord(index) );
                  options.linkify ? $('#facetview_results tr:last-child', obj).linkify() : false;
+
+                // add to chart
+                addViz(value['_id'], "fdl/data");
             });
             if ( options.result_box_colours.length > 0 ) {
                 jQuery('.result_box', obj).each(function () {
@@ -1667,6 +1797,7 @@ search box - the end user will not know they are happening.
         } else {
             thefacetview += '<div class="span12" id="facetview_rightcol">';
         }
+        thefacetview += '<div class="facetview_plots_container"><div id="chart"/></div>';
         thefacetview += '<div class="facetview_search_options_container">';
         thefacetview += '<div class="btn-group" style="display:inline-block; margin-right:5px;"> \
             <a class="btn btn-small" title="clear all search settings and start again" onclick="clear_reload();"><i class="icon-remove"></i></a> \

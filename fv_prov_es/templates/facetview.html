@@ -54,6 +54,12 @@
 
   <script src="{{ url_for('static', filename='jquery-tagcloud-0.5.0/jquery.tagcloud.js' ) }}"></script>
 
+  <script type="text/javascript" src="{{ url_for('static', filename='d3-3.5.5/d3.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='d3-tip-0.6.3/d3.tip.v0.6.3.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='prov-es-fdl/prov-es-fdl-facetview.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='prov-es-fdl/prov-es-fdl-facetview.css') }}">
+
+
   <style>
     .location_search_map {
       width: 100%;
@@ -185,6 +191,7 @@ function show_prov_es_ttl() {
 
 // global backdrop
 var backdrop = null;
+
 
 jQuery(document).ready(function($) {
   Tags.bootstrapVersion = "2";
@@ -1452,6 +1459,165 @@ jQuery(document).ready(function($) {
   $('.facetview_filtershow').each(function(index, value) {
     $(value).click();
   });
+
+  // add force toggle
+  $('#toggle_force').on('click', function() {
+    if (forceEnabled) {
+      forceEnabled = false;
+      $(this).removeClass("btn-success");
+      setTimeout(function() {
+          force.stop();
+          setGraphVizLocs();
+      }, 100);
+    }else {
+      forceEnabled = true;
+      $(this).addClass("btn-success");
+      enableForce();
+      setTimeout(function() {
+          force.start();
+      }, 500);
+    }
+  });
+
+  // add agent labels toggle
+  $('#toggle_agent_labels').on('click', function() {
+    if (hideLabel.agent) {
+      hideLabel.agent = false;
+      $(this).addClass("btn-success");
+      if (agentGroup) {
+        agentGroup.selectAll("polygon")
+          .data(force.nodes().filter(function(d) {
+            if (d.prov_type == "agent") {
+              showText(d);
+              return true;
+            }
+            return false;
+          }))
+          .on('mouseover', toggleTip)
+          .on('mouseout', toggleTip);
+      }
+    }else {
+      hideLabel.agent = true;
+      $(this).removeClass("btn-success");
+      if (agentGroup) {
+        agentGroup.selectAll("polygon")
+          .data(force.nodes().filter(function(d) {
+            if (d.prov_type == "agent") {
+              hideText(d);
+              return true;
+            }
+            return false;
+          }))
+          .on('mouseover', toggleTip)
+          .on('mouseout', toggleTip);
+      }
+    }
+  });
+
+  // add activity labels toggle
+  $('#toggle_activity_labels').on('click', function() {
+    if (hideLabel.activity) {
+      hideLabel.activity = false;
+      $(this).addClass("btn-success");
+      if (actsGroup) {
+        actsGroup.selectAll("circle")
+          .data(force.nodes().filter(function(d) {
+            if (d.prov_type == "activity") {
+              showText(d);
+              return true;
+            }
+            return false;
+          }))
+          .on('mouseover', toggleTip)
+          .on('mouseout', toggleTip);
+      }
+    }else {
+      hideLabel.activity = true;
+      $(this).removeClass("btn-success");
+      if (actsGroup) {
+        actsGroup.selectAll("circle")
+          .data(force.nodes().filter(function(d) {
+            if (d.prov_type == "activity") {
+              hideText(d);
+              return true;
+            }
+            return false;
+          }))
+          .on('mouseover', toggleTip)
+          .on('mouseout', toggleTip);
+      }
+    }
+  });
+
+  // add entity labels toggle
+  $('#toggle_entity_labels').on('click', function() {
+    if (hideLabel.entity) {
+      hideLabel.entity = false;
+      $(this).addClass("btn-success");
+      if (entsGroup) {
+        entsGroup.selectAll("rect")
+          .data(force.nodes().filter(function(d) {
+            if (d.prov_type == "entity") {
+              showText(d);
+              return true;
+            }
+            return false;
+          }))
+          .on('mouseover', toggleTip)
+          .on('mouseout', toggleTip);
+      }
+    }else {
+      hideLabel.entity = true;
+      $(this).removeClass("btn-success");
+      if (entsGroup) {
+        entsGroup.selectAll("rect")
+          .data(force.nodes().filter(function(d) {
+            if (d.prov_type == "entity") {
+              hideText(d);
+              return true;
+            }
+            return false;
+          }))
+          .on('mouseover', toggleTip)
+          .on('mouseout', toggleTip);
+      }
+    }
+  });
+
+  // add path labels toggle
+  $('#toggle_path_labels').on('click', function() {
+    if (hideLabel.path) {
+      hideLabel.path = false;
+      $(this).addClass("btn-success");
+      if (pathGroup) {
+        pathGroup.selectAll("path")
+          .data(force.links().filter(function(d) {
+            if (d.concept !== undefined) {
+              showPathText(d);
+              return true;
+            }
+            return false;
+          }))
+          .on('mouseover', toggleTip)
+          .on('mouseout', toggleTip);
+      }
+    }else {
+      hideLabel.path = true;
+      $(this).removeClass("btn-success");
+      if (pathGroup) {
+        pathGroup.selectAll("path")
+          .data(force.links().filter(function(d) {
+            if (d.concept !== undefined) {
+              hidePathText(d);
+              return true;
+            }
+            return false;
+          }))
+          .on('mouseover', toggleTip)
+          .on('mouseout', toggleTip);
+      }
+    }
+  });
 });
   </script>
 </head>
@@ -1466,6 +1632,11 @@ jQuery(document).ready(function($) {
         <li><a href="{{ url_for('.home') }}">Home</a></li>
         <li><a href="{{ url_for('api_v0-1.doc') }}">API</a></li>
       </ul>
+      <button class="btn" id="toggle_force">Force</button>
+      <button class="btn" id="toggle_agent_labels">Agent Labels</button>
+      <button class="btn" id="toggle_activity_labels">Activity Labels</button>
+      <button class="btn" id="toggle_entity_labels">Entity Labels</button>
+      <button class="btn" id="toggle_path_labels">Property Labels</button>
     </div>
   </div>
 </div>
