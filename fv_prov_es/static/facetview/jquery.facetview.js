@@ -1797,7 +1797,7 @@ search box - the end user will not know they are happening.
         } else {
             thefacetview += '<div class="span12" id="facetview_rightcol">';
         }
-        thefacetview += '<div class="facetview_plots_container"><div id="chart"/></div>';
+        thefacetview += '<div class="facetview_plots_container"><div id="chart"/></div><br/>';
         thefacetview += '<div class="facetview_search_options_container">';
         thefacetview += '<div class="btn-group" style="display:inline-block; margin-right:5px;"> \
             <a class="btn btn-small" title="clear all search settings and start again" onclick="clear_reload();"><i class="icon-remove"></i></a> \

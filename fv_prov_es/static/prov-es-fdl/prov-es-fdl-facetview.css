@@ -1,3 +1,7 @@
+#chart {
+  background: #eee;
+}
+
 .node {
   stroke: #fff;
   stroke-width: 1.5px;
