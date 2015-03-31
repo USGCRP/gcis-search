@@ -720,16 +720,56 @@ jQuery(document).ready(function($) {
       ],
       [
         {
-          "pre": "prov:wasAssociatedWith: <font color='blue'>",
+          "pre": "<div id='newsearch_wasAssociatedWith_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "prov:wasAssociatedWith: <a>",
           "field": "prov:wasAssociatedWith",
-          "post": "</font>"
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  var ns_div = $(jq('newsearch_wasAssociatedWith_",
+          "field": "_id",
+          "post": "'));\n" +
+                  "  $(ns_div).next('br').remove();\n" +
+                  "  var link = $(ns_div).find('a');\n" +
+                  "  if (link.length > 0) {\n" +
+                  "    var link_text = link.text();\n" +
+                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
+                  "  }else {\n" +
+                  "    $(ns_div).remove();\n" +
+                  "  }\n" +
+                  "});<\/script>"
         }
       ],
       [
         {
-          "pre": "eos:runTimeContext: <font color='blue'>",
+          "pre": "<div id='newsearch_runTimeContext_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "eos:runTimeContext: <a>",
           "field": "eos:runTimeContext",
-          "post": "</font>"
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  var ns_div = $(jq('newsearch_runTimeContext_",
+          "field": "_id",
+          "post": "'));\n" +
+                  "  $(ns_div).next('br').remove();\n" +
+                  "  var link = $(ns_div).find('a');\n" +
+                  "  if (link.length > 0) {\n" +
+                  "    var link_text = link.text();\n" +
+                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
+                  "  }else {\n" +
+                  "    $(ns_div).remove();\n" +
+                  "  }\n" +
+                  "});<\/script>"
         }
       ],
       [
