@@ -477,17 +477,19 @@ function addNodesAndLinks(json) {
   links.forEach(function(l, i) {
     var src = nodesDict[l.source.id];
     var tgt = nodesDict[l.target.id];
-    var link_id = src + '_' + tgt;
-    new_links.push({
-      id: link_id,
-      source:src,
-      target:tgt,
-      type:l.type,
-      value:l.value,
-      concept:l.concept,
-      doc:l.doc
-    });
-    newLinksDict[link_id] = true;
+    if (src !== undefined && tgt !== undefined) {
+      var link_id = src + '_' + tgt;
+      new_links.push({
+        id: link_id,
+        source:src,
+        target:tgt,
+        type:l.type,
+        value:l.value,
+        concept:l.concept,
+        doc:l.doc
+      });
+      newLinksDict[link_id] = true;
+    }
   });
   json.links.forEach(function(l) {
     var src = nodesDict[json.nodes[l.source].id];
