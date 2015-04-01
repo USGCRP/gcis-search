@@ -108,7 +108,7 @@ class QueryJson(Resource):
         # return result
         return { 'success': True,
                  'message': message,
-                 'result': pej }
+                 'result': pej.get('_source', {}) }
 
 
 @services.route('/%s/download/json' % NAMESPACE,
