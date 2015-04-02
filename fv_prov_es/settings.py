@@ -13,7 +13,7 @@ class Config(object):
 class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///../database.db'
 
-    CACHE_TYPE = 'simple'
+    CACHE_TYPE = 'null'
 
 
 class DevConfig(Config):
