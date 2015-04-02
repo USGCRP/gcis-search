@@ -977,6 +977,12 @@ search box - the end user will not know they are happening.
             var data = parseresults(sdata);
             options.data = data;
             
+            // initialize message
+            $('#message').empty();
+            var message = $('.facetview_freetext').val();
+            if (message != "")
+                $('#message').html("<p>Showing provenance concepts for <b><i>" + message + "</i></b></p>");
+
             // initialize fdl plot
             if (svg !== null) {
                 nodes = [];
@@ -1841,6 +1847,7 @@ search box - the end user will not know they are happening.
         }
 
         thefacetview += '</div>';
+        thefacetview += '<div class="facetview_message_container"><div id="message"/></div>';
 
         if ( options.enable_locationselect ) {
             thefacetview += '<div class="container location_search"> \
