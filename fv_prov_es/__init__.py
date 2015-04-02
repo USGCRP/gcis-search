@@ -23,13 +23,28 @@ class ReverseProxied(object):
     different than what is used locally.
 
     In nginx:
-    location /myprefix {
-        proxy_pass http://192.168.0.1:5001;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Scheme $scheme;
-        proxy_set_header X-Script-Name /myprefix;
+        location /myprefix {
+            proxy_pass http://127.0.0.1:8888;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Scheme $scheme;
+            proxy_set_header X-Script-Name /myprefix;
         }
+
+    In apache:
+        ProxyRequests Off
+        ProxyPass /myprefix/ http://127.0.0.1:8888/
+        ProxyPassReverse /myprefix/ http://127.0.0.1:8888/
+        ProxyPass /myprefix http://127.0.0.1:8888
+        ProxyPassReverse /myprefix http://127.0.0.1:8888
+        <Location /myprefix>
+            Header add "X-Script-Name" "/myprefix"
+            RequestHeader set "X-Script-Name" "/myprefix"
+            Header add "Host" "fqdn.domain.com"
+            RequestHeader set "Host" "fqdn.domain.com"
+            Header add "X-Scheme" "https"
+            RequestHeader set "X-Scheme" "https"
+        </Location>
 
     :param app: the WSGI application
     '''
@@ -47,6 +62,9 @@ class ReverseProxied(object):
         scheme = environ.get('HTTP_X_SCHEME', '')
         if scheme:
             environ['wsgi.url_scheme'] = scheme
+        x_forwarded_host = environ.get('HTTP_X_FORWARDED_HOST', '')
+        if x_forwarded_host:
+            environ['HTTP_HOST'] = x_forwarded_host
         return self.app(environ, start_response)
 
 
