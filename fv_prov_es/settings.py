@@ -30,3 +30,4 @@ class DevConfig(Config):
 
     # for PROVES app
     PROVES_ES_PREFIX = 'prov_es_dev'
+    PROVES_ES_ALIAS = 'prov_es_dev'

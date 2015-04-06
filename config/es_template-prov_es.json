@@ -1,6 +1,6 @@
 {
   "order" : 0,
-  "template" : "prov_es*",
+  "template" : "{{ prefix }}-*",
   "settings" : {
     "index.refresh_interval" : "5s"
   },
@@ -45,6 +45,6 @@
     }
   },
   "aliases" : {
-    "prov_es" : {}
+    "{{ alias }}" : {}
   }
 }
