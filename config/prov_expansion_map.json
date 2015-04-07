@@ -1,0 +1,40 @@
+{
+  "activity": {
+    "prov:wasAssociatedWith": {
+      "type": "agent",
+      "source": true
+    },
+    "eos:usesSoftware":{
+      "type": "entity",
+      "source": false
+    }
+  },
+  "entity": {
+    "gcis:sourceInstrument": {
+      "type": "entity",
+      "source": false
+    },
+    "gcis:inInstrument": {
+      "type": "entity",
+      "source": false
+    },
+    "gcis:hasSensor": {
+      "type": "entity",
+      "source": false
+    },
+    "gcis:inPlatform": {
+      "type": "entity",
+      "source": true
+    },
+    "gcis:hasGoverningOrganization": {
+      "type": "entity",
+      "source": true
+    },
+    "gcis:hasInstrument": {
+      "type": "entity",
+      "source": true
+    }
+  },
+  "agent": {
+  }
+}

@@ -7,9 +7,17 @@ from fv_prov_es import cache
 from fv_prov_es.forms import LoginForm
 from fv_prov_es.models import User
 from fv_prov_es.lib.graphviz import add_graphviz_positions
-from fv_prov_es.lib.utils import get_prov_es_json, update_dict
+from fv_prov_es.lib.utils import get_prov_es_json, update_dict, get_expansion_map
+from fv_prov_es.lib.d3_utils import get_agent_node, get_activity_node, get_entity_node
 
 main = Blueprint('main', __name__)
+
+
+D3_NODE_FUNC = {
+    'agent':       get_agent_node,
+    'activity':    get_activity_node,
+    'entity':      get_entity_node,
+}
 
 
 @main.route('/')
@@ -72,9 +80,76 @@ def fdl():
                            current_year=datetime.now().year)
 
 
+def expand_activity_prov(a, act, pem, pej, nodes, viz_dict, associations, a2e_relations):
+    """Expand PROV-ES for activity."""
+
+    for pred in pem.get('activity', {}):
+        obj_type = pem['activity'][pred]['type']
+        obj_is_source = pem['activity'][pred]['source']
+        if pred in act:
+            obj_id = act[pred]
+            if obj_id in pej.get(obj_type, {}):
+                obj_doc = pej[obj_type][obj_id]
+            else:
+                obj_doc = get_prov_es_json(obj_id)['_source']['prov_es_json'][obj_type][obj_id]
+            viz_dict['nodes'].append(D3_NODE_FUNC[obj_type](obj_id, obj_doc))
+            nodes.append(obj_id)
+            if obj_type == "agent": links_ref = associations
+            elif obj_type == "entity": links_ref = a2e_relations
+            else: links_ref = None
+            if links_ref is not None:
+                if obj_is_source:
+                    links_ref.append({
+                        'source': obj_id,
+                        'target': a,
+                        'concept': pred,
+                    })
+                else:
+                    links_ref.append({
+                        'source': a,
+                        'target': obj_id,
+                        'concept': pred,
+                    })
+        
+
+def expand_entity_prov(e, ent, pem, pej, nodes, viz_dict, e2e_relations):
+    """Expand PROV-ES for entity."""
+   
+    for pred in pem.get('entity', {}):
+        obj_type = pem['entity'][pred]['type']
+        obj_is_source = pem['entity'][pred]['source']
+        if pred in ent:
+            obj_id = ent[pred]
+            if obj_id in pej.get(obj_type, {}):
+                obj_doc = pej[obj_type][obj_id]
+            else:
+                obj_doc = get_prov_es_json(obj_id)['_source']['prov_es_json'][obj_type][obj_id]
+            viz_dict['nodes'].append(D3_NODE_FUNC[obj_type](obj_id, obj_doc))
+            nodes.append(obj_id)
+            if obj_type == "entity": links_ref = e2e_relations
+            else: links_ref = None
+            if links_ref is not None:
+                if obj_is_source:
+                    links_ref.append({
+                        'source': obj_id,
+                        'target': e,
+                        'concept': pred,
+                    })
+                else:
+                    links_ref.append({
+                        'source': e,
+                        'target': obj_id,
+                        'concept': pred,
+                    })
+        
+
 @cache.cached(timeout=1000)
 def parse_d3(pej):
     """Return d3 node data structure for an activity, entity, or agent."""
+
+    # get expansion map
+    pem = get_expansion_map()
+    #current_app.logger.debug("prov_expansion_map: %s" % json.dumps(pem, indent=2))
 
     # viz dict
     nodes = [] 
@@ -87,201 +162,23 @@ def parse_d3(pej):
 
     # add agent nodes
     for a in pej.get('agent', {}):
-        agent = pej['agent'][a]
-        if isinstance(agent['prov:type'], types.DictType):
-            prov_type = agent['prov:type']['$']
-        else: prov_type = agent['prov:type']
-        viz_dict['nodes'].append({
-            'id': a,
-            'group': 1,
-            'size': 1000,
-            'shape': 'triangle-down',
-            'prov_type': 'agent',
-            'doc': agent,
-        })
+        viz_dict['nodes'].append(get_agent_node(a, pej['agent'][a]))
         nodes.append(a)
 
     # add activities
     for a in pej.get('activity', {}):
         act = pej['activity'][a]
-        viz_dict['nodes'].append({
-            'id': a,
-            'group': 2,
-            'size': 3000,
-            'shape': 'square',
-            'prov_type': 'activity',
-            'doc': act,
-        })
+        viz_dict['nodes'].append(get_activity_node(a, act))
         nodes.append(a)
-        if 'prov:wasAssociatedWith' in act:
-            ag = act['prov:wasAssociatedWith']
-            if ag in pej.get('agent', {}):
-                agent = pej['agent'][ag]
-            else:
-                agent = get_prov_es_json(ag)['_source']['prov_es_json']['agent'][ag]
-            if isinstance(agent['prov:type'], types.DictType):
-                prov_type = agent['prov:type']['$']
-            else: prov_type = agent['prov:type']
-            viz_dict['nodes'].append({
-                'id': ag,
-                'group': 1,
-                'size': 1000,
-                'shape': 'triangle-down',
-                'prov_type': 'agent',
-                'doc': agent,
-            })
-            nodes.append(ag)
-            associations.append({
-                'source': act['prov:wasAssociatedWith'],
-                'target': a,
-                'concept': 'prov:wasAssociatedWith',
-            })
-        if 'eos:usesSoftware' in act:
-            e = act['eos:usesSoftware']
-            if e in pej.get('entity', {}):
-                ent = pej['entity'][e]
-            else:
-                ent = get_prov_es_json(e)['_source']['prov_es_json']['entity'][e]
-                viz_dict['nodes'].append({
-                    'id': e,
-                    'group': 3,
-                    'size': 1000,
-                    'prov_type': 'entity',
-                    'doc': ent,
-                })
-                nodes.append(e)
-            a2e_relations.append({
-                'source': a,
-                'target': act['eos:usesSoftware'],
-                'concept': 'eos:usesSoftware',
-            })
+        expand_activity_prov(a, act, pem, pej, nodes, viz_dict, associations, a2e_relations)
         
     # add entities
     for e in pej.get('entity', {}):
         ent = pej['entity'][e]
-        viz_dict['nodes'].append({
-            'id': e,
-            'group': 3,
-            'size': 1000,
-            'prov_type': 'entity',
-            'doc': ent,
-        })
+        viz_dict['nodes'].append(get_entity_node(e, ent))
         nodes.append(e)
-        if 'gcis:sourceInstrument' in ent:
-            e2 = ent['gcis:sourceInstrument']
-            if e2 in pej.get('entity', {}):
-                ent2 = pej['entity'][e2]
-            elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                viz_dict['nodes'].append({
-                    'id': e2,
-                    'group': 3,
-                    'size': 1000,
-                    'prov_type': 'entity',
-                    'doc': ent2,
-                })
-                nodes.append(e2)
-            e2e_relations.append({
-                'source': e,
-                'target': ent['gcis:sourceInstrument'],
-                'concept': 'gcis:sourceInstrument',
-            })
-        if 'gcis:inInstrument' in ent:
-            e2 = ent['gcis:inInstrument']
-            if e2 in pej.get('entity', {}):
-                ent2 = pej['entity'][e2]
-            elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                viz_dict['nodes'].append({
-                    'id': e2,
-                    'group': 3,
-                    'size': 1000,
-                    'prov_type': 'entity',
-                    'doc': ent2,
-                })
-                nodes.append(e2)
-            e2e_relations.append({
-                'source': e,
-                'target': ent['gcis:inInstrument'],
-                'concept': 'gcis:inInstrument',
-            })
-        if 'gcis:hasSensor' in ent:
-            e2 = ent['gcis:hasSensor']
-            if e2 in pej.get('entity', {}):
-                ent2 = pej['entity'][e2]
-            elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                viz_dict['nodes'].append({
-                    'id': e2,
-                    'group': 3,
-                    'size': 1000,
-                    'prov_type': 'entity',
-                    'doc': ent2,
-                })
-                nodes.append(e2)
-            e2e_relations.append({
-                'source': e,
-                'target': ent['gcis:hasSensor'],
-                'concept': 'gcis:hasSensor',
-            })
-        if 'gcis:inPlatform' in ent:
-            e2 = ent['gcis:inPlatform']
-            if e2 in pej.get('entity', {}):
-                ent2 = pej['entity'][e2]
-            elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                viz_dict['nodes'].append({
-                    'id': e2,
-                    'group': 3,
-                    'size': 1000,
-                    'prov_type': 'entity',
-                    'doc': ent2,
-                })
-                nodes.append(e2)
-            e2e_relations.append({
-                'source': ent['gcis:inPlatform'],
-                'target': e,
-                'concept': 'gcis:inPlatform',
-            })
-        if 'gcis:hasGoverningOrganization' in ent:
-            e2 = ent['gcis:hasGoverningOrganization']
-            if e2 in pej.get('entity', {}):
-                ent2 = pej['entity'][e2]
-            elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                viz_dict['nodes'].append({
-                    'id': e2,
-                    'group': 3,
-                    'size': 1000,
-                    'prov_type': 'entity',
-                    'doc': ent2,
-                })
-                nodes.append(e2)
-            e2e_relations.append({
-                'source': ent['gcis:hasGoverningOrganization'],
-                'target': e,
-                'concept': 'gcis:hasGoverningOrganization',
-            })
-        if 'gcis:hasInstrument' in ent:
-            e2 = ent['gcis:hasInstrument']
-            if e2 in pej.get('entity', {}):
-                ent2 = pej['entity'][e2]
-            elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                viz_dict['nodes'].append({
-                    'id': e2,
-                    'group': 3,
-                    'size': 1000,
-                    'prov_type': 'entity',
-                    'doc': ent2,
-                })
-                nodes.append(e2)
-            e2e_relations.append({
-                'source': ent['gcis:hasInstrument'],
-                'target': e,
-                'concept': 'gcis:hasInstrument',
-            })
-
+        expand_entity_prov(e, ent, pem, pej, nodes, viz_dict, e2e_relations)
+        
     # add used links
     for u in pej.get('used', {}):
         used = pej['used'][u]
@@ -292,58 +189,9 @@ def parse_d3(pej):
             act = pej['activity'][a]
         else:
             act = get_prov_es_json(a)['_source']['prov_es_json']['activity'][a]
-            viz_dict['nodes'].append({
-                'id': a,
-                'group': 2,
-                'size': 3000,
-                'shape': 'square',
-                'prov_type': 'activity',
-                'doc': act,
-            })
-            nodes.append(a)
-            if 'prov:wasAssociatedWith' in act:
-                ag = act['prov:wasAssociatedWith']
-                if ag in pej.get('agent', {}):
-                    agent = pej['agent'][ag]
-                else:
-                    agent = get_prov_es_json(ag)['_source']['prov_es_json']['agent'][ag]
-                if isinstance(agent['prov:type'], types.DictType):
-                    prov_type = agent['prov:type']['$']
-                else: prov_type = agent['prov:type']
-                viz_dict['nodes'].append({
-                    'id': ag,
-                    'group': 1,
-                    'size': 1000,
-                    'shape': 'triangle-down',
-                    'prov_type': 'agent',
-                    'doc': agent,
-                })
-                nodes.append(ag)
-                associations.append({
-                    'source': act['prov:wasAssociatedWith'],
-                    'target': a,
-                    'concept': 'prov:wasAssociatedWith',
-                })
-            if 'eos:usesSoftware' in act:
-                e = act['eos:usesSoftware']
-                if e in pej.get('entity', {}):
-                    ent = pej['entity'][e]
-                else:
-                    ent = get_prov_es_json(e)['_source']['prov_es_json']['entity'][e]
-                    viz_dict['nodes'].append({
-                        'id': e,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent,
-                    })
-                    nodes.append(e)
-                a2e_relations.append({
-                    'source': a,
-                    'target': act['eos:usesSoftware'],
-                    'concept': 'eos:usesSoftware',
-                })
-        
+        viz_dict['nodes'].append(get_activity_node(a, act))
+        nodes.append(a)
+        expand_activity_prov(a, act, pem, pej, nodes, viz_dict, associations, a2e_relations)
 
         # get entity
         e = used['prov:entity']
@@ -351,128 +199,9 @@ def parse_d3(pej):
             ent = pej['entity'][e]
         else:
             ent = get_prov_es_json(e)['_source']['prov_es_json']['entity'][e]
-            viz_dict['nodes'].append({
-                'id': e,
-                'group': 3,
-                'size': 1000,
-                'prov_type': 'entity',
-                'doc': ent,
-            })
-            nodes.append(e)
-            if 'gcis:sourceInstrument' in ent:
-                e2 = ent['gcis:sourceInstrument']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': e,
-                    'target': ent['gcis:sourceInstrument'],
-                    'concept': 'gcis:sourceInstrument',
-                })
-            if 'gcis:inInstrument' in ent:
-                e2 = ent['gcis:inInstrument']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': e,
-                    'target': ent['gcis:inInstrument'],
-                    'concept': 'gcis:inInstrument',
-                })
-            if 'gcis:hasSensor' in ent:
-                e2 = ent['gcis:hasSensor']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': e,
-                    'target': ent['gcis:hasSensor'],
-                    'concept': 'gcis:hasSensor'
-                })
-            if 'gcis:inPlatform' in ent:
-                e2 = ent['gcis:inPlatform']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': ent['gcis:inPlatform'],
-                    'target': e,
-                    'concept': 'gcis:inPlatform',
-                })
-            if 'gcis:hasGoverningOrganization' in ent:
-                e2 = ent['gcis:hasGoverningOrganization']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': ent['gcis:hasGoverningOrganization'],
-                    'target': e,
-                    'concept': 'gcis:hasGoverningOrganization',
-                })
-            if 'gcis:hasInstrument' in ent:
-                e2 = ent['gcis:hasInstrument']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': ent['gcis:hasInstrument'],
-                    'target': e,
-                    'concept': 'gcis:hasInstrument',
-                })
+        viz_dict['nodes'].append(get_entity_node(e, ent))
+        nodes.append(e)
+        expand_entity_prov(e, ent, pem, pej, nodes, viz_dict, e2e_relations)
         
         viz_dict['links'].append({
             'source': nodes.index(a),
@@ -494,57 +223,9 @@ def parse_d3(pej):
             act = pej['activity'][a]
         else:
             act = get_prov_es_json(a)['_source']['prov_es_json']['activity'][a]
-            viz_dict['nodes'].append({
-                'id': a,
-                'group': 2,
-                'size': 3000,
-                'shape': 'square',
-                'prov_type': 'activity',
-                'doc': act,
-            })
-            nodes.append(a)
-            if 'prov:wasAssociatedWith' in act:
-                ag = act['prov:wasAssociatedWith']
-                if ag in pej.get('agent', {}):
-                    agent = pej['agent'][ag]
-                else:
-                    agent = get_prov_es_json(ag)['_source']['prov_es_json']['agent'][ag]
-                if isinstance(agent['prov:type'], types.DictType):
-                    prov_type = agent['prov:type']['$']
-                else: prov_type = agent['prov:type']
-                viz_dict['nodes'].append({
-                    'id': ag,
-                    'group': 1,
-                    'size': 1000,
-                    'shape': 'triangle-down',
-                    'prov_type': 'agent',
-                    'doc': agent,
-                })
-                nodes.append(ag)
-                associations.append({
-                    'source': act['prov:wasAssociatedWith'],
-                    'target': a,
-                    'concept': 'prov:wasAssociatedWith',
-                })
-            if 'eos:usesSoftware' in act:
-                e = act['eos:usesSoftware']
-                if e in pej.get('entity', {}):
-                    ent = pej['entity'][e]
-                else:
-                    ent = get_prov_es_json(e)['_source']['prov_es_json']['entity'][e]
-                    viz_dict['nodes'].append({
-                        'id': e,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent,
-                    })
-                    nodes.append(e)
-                a2e_relations.append({
-                    'source': a,
-                    'target': act['eos:usesSoftware'],
-                    'concept': 'eos:usesSoftware',
-                })
+        viz_dict['nodes'].append(get_activity_node(a, act))
+        nodes.append(a)
+        expand_activity_prov(a, act, pem, pej, nodes, viz_dict, associations, a2e_relations)
         
         # get entity
         e = gen['prov:entity']
@@ -552,128 +233,9 @@ def parse_d3(pej):
             ent = pej['entity'][e]
         else:
             ent = get_prov_es_json(e)['_source']['prov_es_json']['entity'][e]
-            viz_dict['nodes'].append({
-                'id': e,
-                'group': 3,
-                'size': 1000,
-                'prov_type': 'entity',
-                'doc': ent,
-            })
-            nodes.append(e)
-            if 'gcis:sourceInstrument' in ent:
-                e2 = ent['gcis:sourceInstrument']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': e,
-                    'target': ent['gcis:sourceInstrument'],
-                    'concept': 'gcis:sourceInstrument',
-                })
-            if 'gcis:inInstrument' in ent:
-                e2 = ent['gcis:inInstrument']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': e, 
-                    'target': ent['gcis:inInstrument'],
-                    'concept': 'gcis:inInstrument',
-                })
-            if 'gcis:hasSensor' in ent:
-                e2 = ent['gcis:hasSensor']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': e,
-                    'target': ent['gcis:hasSensor'],
-                    'concept': 'gcis:hasSensor',
-                })
-            if 'gcis:inPlatform' in ent:
-                e2 = ent['gcis:inPlatform']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': ent['gcis:inPlatform'],
-                    'target': e,
-                    'concept': 'gcis:inPlatform',
-                })
-            if 'gcis:hasGoverningOrganization' in ent:
-                e2 = ent['gcis:hasGoverningOrganization']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': ent['gcis:hasGoverningOrganization'],
-                    'target': e,
-                    'concept': 'gcis:hasGoverningOrganization',
-                })
-            if 'gcis:hasInstrument' in ent:
-                e2 = ent['gcis:hasInstrument']
-                if e2 in pej.get('entity', {}):
-                    ent2 = pej['entity'][e2]
-                elif e2 in get_prov_es_json(e2)['_source']['prov_es_json'].get('entity', {}):
-                    ent2 = get_prov_es_json(e2)['_source']['prov_es_json']['entity'][e2]
-                    viz_dict['nodes'].append({
-                        'id': e2,
-                        'group': 3,
-                        'size': 1000,
-                        'prov_type': 'entity',
-                        'doc': ent2,
-                    })
-                    nodes.append(e2)
-                e2e_relations.append({
-                    'source': ent['gcis:hasInstrument'],
-                    'target': e,
-                    'concept': 'gcis:hasInstrument',
-                })
+        viz_dict['nodes'].append(get_entity_node(e, ent))
+        nodes.append(e)
+        expand_entity_prov(e, ent, pem, pej, nodes, viz_dict, e2e_relations)
         
         viz_dict['links'].append({
             'source': nodes.index(e),
@@ -695,13 +257,7 @@ def parse_d3(pej):
             col = pej['entity'][c]
         else:
             col = get_prov_es_json(c)['_source']['prov_es_json']['entity'][c]
-            viz_dict['nodes'].append({
-                'id': c,
-                'group': 3,
-                'size': 1000,
-                'prov_type': 'entity',
-                'doc': col,
-            })
+            viz_dict['nodes'].append(get_entity_node(c, col))
             nodes.append(c)
         
         # get entity
@@ -710,13 +266,7 @@ def parse_d3(pej):
             ent = pej['entity'][e]
         else:
             ent = get_prov_es_json(e)['_source']['prov_es_json']['entity'][e]
-            viz_dict['nodes'].append({
-                'id': e,
-                'group': 3,
-                'size': 1000,
-                'prov_type': 'entity',
-                'doc': ent,
-            })
+            viz_dict['nodes'].append(get_entity_node(e, ent))
             nodes.append(e)
         
         e2e_relations.append({

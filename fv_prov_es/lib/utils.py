@@ -55,6 +55,17 @@ def pprint_xml(et):
     return tostring(et, pretty_print=True)
 
 
+def get_expansion_map():
+    """Return concept/relation expansion map."""
+    
+    map_file = os.path.join(current_app.root_path,
+                            current_app.config['PROV_EXPANSION_CFG'])
+    map_file = os.path.normpath(map_file)
+    with open(map_file) as f:
+        prov_exp_map = json.load(f)
+    return prov_exp_map
+
+
 def update_dict(d, u):
     """Recursively update dict."""
 

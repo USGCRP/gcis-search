@@ -9,6 +9,9 @@ class Config(object):
     # ES template
     ES_TEMPLATE = "../config/es_template-prov_es.json"
 
+    # concept expansion mapping
+    PROV_EXPANSION_CFG = "../config/prov_expansion_map.json"
+
 
 class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///../database.db'
