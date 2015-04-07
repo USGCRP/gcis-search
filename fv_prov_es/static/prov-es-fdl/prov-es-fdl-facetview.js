@@ -584,7 +584,10 @@ function get_text(d) {
     }
     if (d.type == "e2e_related" || d.type == "a2e_related" || d.type == "associated" 
         || d.type == "used" || d.type == "wasGeneratedBy" ) var label = "";
-    else var label = d.doc['dcterms:title'] !== undefined ? d.doc['dcterms:title'] : d.id;
+    else {
+      var label = d.doc['prov:label'] !== undefined ? d.doc['prov:label'] :
+                  d.doc['dcterms:title'] !== undefined ? d.doc['dcterms:title'] : d.id;
+    }
     return '(' + t + ') ' + label;
   }else
     return d.id;
