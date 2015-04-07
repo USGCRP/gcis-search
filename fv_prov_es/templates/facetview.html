@@ -203,8 +203,10 @@ jQuery(document).ready(function($) {
         {'field':'_type', 'display': 'concept'},
         {'field':'prov:type.raw', 'display': 'prov:type'},
         {'field':'prov:entity.raw', 'display': 'prov:entity'},
-        {'field':'prov:activity.raw', 'display': 'prov:activity'},
         {'field':'prov:agent.raw', 'display': 'prov:agent'},
+        {'field':'prov:activity.raw', 'display': 'prov:activity'},
+        {'field':'prov:label.raw', 'display': 'prov:label'},
+        {'field':'prov:role.raw', 'display': 'prov:role'},
         {'field':'prov:startTime', 'display': 'prov:startTime', 'type': 'date'},
         {'field':'prov:endTime', 'display': 'prov:endTime', 'type': 'date'},
         {'field':'prov:collection.raw', 'display': 'prov:collection'},
@@ -372,31 +374,83 @@ jQuery(document).ready(function($) {
       ],
       [
         {
-          "pre": "<span id='prov_type_",
+          "pre": "<div id='newsearch_provtype_",
           "field": "_id",
-          "post": "'></span><script>$(function() {\n" +
-                  "  var prov_type = null;\n"
+          "post": "'>"
         },
         {
-          "pre": "  prov_type = '",
+          "pre": "prov:type: <a>",
           "field": "prov:type",
-          "post": "';\n"
+          "post": "</a>"
         },
         {
-          "pre": "  var id='",
+          "pre": "</div><script>$(function() {\n" +
+                 "  var ns_div = $(jq('newsearch_provtype_",
           "field": "_id",
-          "post": "';\n" +
-                 "  var pt_div = $(jq('prov_type_' + id));\n" +
-                  "  if (prov_type !== null) {\n" +
-                  "    if (prov_type[0] == '{') {\n" +
-                  "      prov_type = JSON.parse(prov_type)['$'];\n" +
-                  "    }\n" +
-                  "    pt_div.html('prov:type: <font color=\\'blue\\'>' + prov_type + '</font>');\n" +
+          "post": "'));\n" +
+                  "  $(ns_div).next('br').remove();\n" +
+                  "  var link = $(ns_div).find('a');\n" +
+                  "  if (link.length > 0) {\n" +
+                  "    var link_text = link.text();\n" +
+                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
                   "  }else {\n" +
-                  "    pt_div.remove();\n" +
+                  "    $(ns_div).remove();\n" +
                   "  }\n" +
-                  "});\n" +
-                  "<\/script>"
+                  "});<\/script>"
+        }
+      ],
+      [
+        {
+          "pre": "<div id='newsearch_provlabel_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "prov:label: <a>",
+          "field": "prov:label",
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  var ns_div = $(jq('newsearch_provlabel_",
+          "field": "_id",
+          "post": "'));\n" +
+                  "  $(ns_div).next('br').remove();\n" +
+                  "  var link = $(ns_div).find('a');\n" +
+                  "  if (link.length > 0) {\n" +
+                  "    var link_text = link.text();\n" +
+                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
+                  "  }else {\n" +
+                  "    $(ns_div).remove();\n" +
+                  "  }\n" +
+                  "});<\/script>"
+        }
+      ],
+      [
+        {
+          "pre": "<div id='newsearch_provrole_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "prov:role: <a>",
+          "field": "prov:role",
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  var ns_div = $(jq('newsearch_provrole_",
+          "field": "_id",
+          "post": "'));\n" +
+                  "  $(ns_div).next('br').remove();\n" +
+                  "  var link = $(ns_div).find('a');\n" +
+                  "  if (link.length > 0) {\n" +
+                  "    var link_text = link.text();\n" +
+                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
+                  "  }else {\n" +
+                  "    $(ns_div).remove();\n" +
+                  "  }\n" +
+                  "});<\/script>"
         }
       ],
       [
