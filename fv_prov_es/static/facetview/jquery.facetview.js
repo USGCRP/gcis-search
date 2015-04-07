@@ -1803,14 +1803,6 @@ search box - the end user will not know they are happening.
         } else {
             thefacetview += '<div class="span12" id="facetview_rightcol">';
         }
-        thefacetview += '<div class="facetview_labeltoggles_container">';
-        thefacetview += '<button class="btn" id="toggle_force">Force</button>&nbsp;';
-        thefacetview += '<button class="btn" id="toggle_agent_labels">Agent Labels</button>&nbsp;';
-        thefacetview += '<button class="btn" id="toggle_activity_labels">Activity Labels</button>&nbsp;';
-        thefacetview += '<button class="btn" id="toggle_entity_labels">Entity Labels</button>&nbsp;';
-        thefacetview += '<button class="btn" id="toggle_path_labels">Property Labels</button>';
-        thefacetview += '</div><br/>';
-        thefacetview += '<div class="facetview_plots_container"><div id="chart"/></div><br/>';
         thefacetview += '<div class="facetview_search_options_container">';
         thefacetview += '<div class="btn-group" style="display:inline-block; margin-right:5px;"> \
             <a class="btn btn-small" title="clear all search settings and start again" onclick="clear_reload();"><i class="icon-remove"></i></a> \
@@ -1907,6 +1899,14 @@ search box - the end user will not know they are happening.
 
         thefacetview += '<div style="clear:both;" class="btn-toolbar" id="facetview_selectedfilters"></div>';
         options.pager_on_top ? thefacetview += '<div class="facetview_metadata" style="margin-top:20px;"></div>' : "";
+        thefacetview += '<div class="facetview_labeltoggles_container">';
+        thefacetview += '<button class="btn" id="toggle_force">Force</button>&nbsp;';
+        thefacetview += '<button class="btn" id="toggle_agent_labels">Agent Labels</button>&nbsp;';
+        thefacetview += '<button class="btn" id="toggle_activity_labels">Activity Labels</button>&nbsp;';
+        thefacetview += '<button class="btn" id="toggle_entity_labels">Entity Labels</button>&nbsp;';
+        thefacetview += '<button class="btn" id="toggle_path_labels">Property Labels</button>';
+        thefacetview += '</div><br/>';
+        thefacetview += '<div class="facetview_plots_container"><div id="chart"/></div><br/>';
         thefacetview += options.searchwrap_start + options.searchwrap_end;
         thefacetview += '<div class="facetview_metadata"></div></div></div></div>';
 
