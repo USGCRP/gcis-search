@@ -126,7 +126,7 @@ def expand_entity_prov(e, ent, pem, pej, nodes, viz_dict, e2e_relations):
                 obj_doc = get_prov_es_json(obj_id)['_source']['prov_es_json'][obj_type][obj_id]
             viz_dict['nodes'].append(D3_NODE_FUNC[obj_type](obj_id, obj_doc))
             nodes.append(obj_id)
-            if obj_type == "entity": links_ref = e2e_relations
+            if obj_type in ("agent", "entity"): links_ref = e2e_relations
             else: links_ref = None
             if links_ref is not None:
                 if obj_is_source:
