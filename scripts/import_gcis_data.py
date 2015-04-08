@@ -23,11 +23,22 @@ def get_image_prov(j, gcis_url):
     # create image, figure, chapter and report entities
     img_id = "gcis:%s" % j['uri'][1:].replace('/', '-')
     img_title = j['title']
-    doc.entity(img_id, [
+    img_url = None
+    img_thumbnail_url = None
+    for file_md in j.get('files', []):
+        img_url = file_md['href']
+        img_thumbnail_url = file_md['thumbnail_href']
+    img_attrs = [
         ( "prov:type", 'gcis:Image' ),
-        ( "dcterms:title", img_title ),
-        ( "gcis:accessURL", "%s%s" % (gcis_url, j['uri']) ),
-    ])
+        ( "prov:label", img_title ),
+    ]
+    if img_url is None:
+        img_attrs.append(( "prov:location", "%s%s" % (gcis_url, j['uri']) ))
+    else:
+        img_attrs.append(( "prov:location", img_url ))
+    if img_thumbnail_url is None:
+        img_attrs.append(( "hysds:thumbnail", img_thumbnail_url ))
+    doc.entity(img_id, img_attrs)
     reports = []
     chapters = []
     figures = []
@@ -44,8 +55,8 @@ def get_image_prov(j, gcis_url):
         if report_id not in reports:
             doc.entity(report_id, [
                 ( "prov:type", 'gcis:Report' ),
-                ( "dcterms:title", report['title'] ),
-                ( "gcis:accessURL", report['url'] ),
+                ( "prov:label", report['title'] ),
+                ( "prov:location", report['url'] ),
             ])
             reports.append(report_id)
 
@@ -57,8 +68,8 @@ def get_image_prov(j, gcis_url):
         if chapter_id not in chapters:
             doc.entity(chapter_id, [
                 ( "prov:type", 'gcis:Chapter' ),
-                ( "dcterms:title", chapter['title'] ),
-                ( "gcis:accessURL", chapter['url'] ),
+                ( "prov:label", chapter['title'] ),
+                ( "prov:location", chapter['url'] ),
             ])
             chapters.append(chapter_id)
         doc.hadMember(report_id, chapter_id)
@@ -71,8 +82,8 @@ def get_image_prov(j, gcis_url):
         if figure_id not in figures:
             doc.entity(figure_id, [
                 ( "prov:type", 'gcis:Figure' ),
-                ( "dcterms:title", figure_md['title'] ),
-                ( "gcis:accessURL", figure_md['uri'] ),
+                ( "prov:label", figure_md['title'] ),
+                ( "prov:location", "%s%s" % (gcis_url, figure_md['uri']) ),
             ])
             figures.append(figure_id)
             doc.hadMember(chapter_id, figure_id)
@@ -88,8 +99,8 @@ def get_image_prov(j, gcis_url):
                                if cont['person'].get(i, None) is not None])
         doc.agent(agent_id, [
             ( "prov:type", "gcis:Person" ),
-            ( "dcterms:title", agent_name ),
-            ( "gcis:accessURL", "%s%s" % (gcis_url, cont['uri']) ),
+            ( "prov:label", agent_name ),
+            ( "prov:location", "%s%s" % (gcis_url, cont['uri']) ),
         ])
         agent_ids.append(agent_id)
 
@@ -102,8 +113,8 @@ def get_image_prov(j, gcis_url):
         doc.entity(input_id, [
             #( "prov:type", "gcis:Dataset" ),
             ( "prov:type", "eos:dataset", ),
-            ( "dcterms:title", input_name ),
-            ( "gcis:accessURL", "%s%s" % (gcis_url, parent['url']) ),
+            ( "prov:label", input_name ),
+            ( "prov:location", "%s%s" % (gcis_url, parent['url']) ),
         ])
         # some activity uri's are null
         if parent['activity_uri'] is None:
@@ -164,7 +175,8 @@ if __name__ == "__main__":
     es_url = app.config['ES_URL']
     gcis_url =  "http://data.globalchange.gov"
     dt = datetime.utcnow()
-    index = "%s-%04d.%02d.%02d" % (app.config['PROVES_ES_PREFIX'],
-                                   dt.year, dt.month, dt.day)
+    #index = "%s-%04d.%02d.%02d" % (app.config['PROVES_ES_PREFIX'],
+    #                               dt.year, dt.month, dt.day)
+    index = "%s-gcis" % app.config['PROVES_ES_PREFIX']
     alias = app.config['PROVES_ES_ALIAS']
     index_gcis(gcis_url, es_url, index, alias)
