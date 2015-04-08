@@ -1,5 +1,5 @@
 import os, sys, json
-from tempfile import mkstemp
+from tempfile import NamedTemporaryFile
 from pydot import Dot, Subgraph, Node, Edge
 
 from flask import current_app
@@ -25,10 +25,10 @@ def get_session_svg(viz_data):
         graph.add_edge(Edge(snode, tnode))
     
     #get svg of graph
-    tmp, file = mkstemp()
-    graph.write_svg(file)
-    svg = open(file).read()
-    os.unlink(file)
+    file = NamedTemporaryFile()
+    graph.write_svg(file.name)
+    svg = file.read()
+    file.close()
     
     #f = open('/tmp/session/session.svg', 'w')
     #f.write("%s\n" % svg)
