@@ -209,6 +209,10 @@ function get_icon(concept) {
     return "<img src='{{ url_for('static', filename='facetview/img/activity.png') }}' class='img-rounded'/>";
   }else if (concept === "agent") {
     return "<img src='{{ url_for('static', filename='facetview/img/agent.png') }}' class='img-rounded'/>";
+  }else if (concept === "used") {
+    return "<img src='{{ url_for('static', filename='facetview/img/used.png') }}' class='img-rounded'/>";
+  }else if (concept === "wasGeneratedBy") {
+    return "<img src='{{ url_for('static', filename='facetview/img/generated.png') }}' class='img-rounded'/>";
   }else {
     return "<img src='{{ url_for('static', filename='facetview/img/relation.png') }}' class='img-rounded'/>";
   }
