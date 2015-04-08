@@ -189,6 +189,19 @@ function show_prov_es_ttl() {
 }
 
 
+function linkify_newsearch(id) {
+  var ns_div = $(jq(id));
+  $(ns_div).next('br').remove();
+  var link = $(ns_div).find('a');
+  if (link.length > 0) {
+    var link_text = link.text();
+    link.attr("href", '?source={"query":{"query_string":{"query":"\\"' + link_text + '\\""}}}');
+  }else {
+    $(ns_div).remove();
+  }
+}
+
+
 // global backdrop
 var backdrop = null;
 
@@ -367,9 +380,20 @@ jQuery(document).ready(function($) {
 */
       [
         {
-          "pre": "id: <font color='blue'>",
+          "pre": "<div id='newsearch_id_",
           "field": "_id",
-          "post": "</font>"
+          "post": "'>"
+        },
+        {
+          "pre": "id: <a>",
+          "field": "_id",
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_id_",
+          "field": "_id",
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -385,18 +409,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_provtype_",
+                 "  linkify_newsearch('newsearch_provtype_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -412,18 +427,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_provlabel_",
+                 "  linkify_newsearch('newsearch_provlabel_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -439,53 +445,63 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_provrole_",
+                 "  linkify_newsearch('newsearch_provrole_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
         {
-          "pre": "prov:concept: <font color='blue'>",
-          "field": "prov:concept",
-          "post": "</font>"
-        }
-      ],
-      [
+          "pre": "<div id='newsearch_jobid_",
+          "field": "_id",
+          "post": "'>"
+        },
         {
-          "pre": "hysds:job_id: <font color='blue'>",
+          "pre": "hysds:job_id: <a>",
           "field": "hysds:job_id",
-          "post": "</font>"
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_jobid_",
+          "field": "_id",
+          "post": "');});<\/script>"
         }
       ],
       [
         {
-          "pre": "info:doi: <font color='blue'>",
+          "pre": "<div id='newsearch_doi_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "info:doi: <a>",
           "field": "info:doi",
-          "post": "</font>"
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_doi_",
+          "field": "_id",
+          "post": "');});<\/script>"
         }
       ],
       [
         {
-          "pre": "gcis:accessURL: <font color='blue'>",
-          "field": "gcis:accessURL",
-          "post": "</font>"
-        }
-      ],
-      [
+          "pre": "<div id='newsearch_provlocation_",
+          "field": "_id",
+          "post": "'>"
+        },
         {
-          "pre": "gcis:downloadURL: <font color='blue'>",
-          "field": "gcis:downloadURL",
-          "post": "</font>"
+          "pre": "prov:location: <a>",
+          "field": "prov:location",
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_provlocation_",
+          "field": "_id",
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -501,18 +517,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_sourceInstrument_",
+                 "  linkify_newsearch('newsearch_sourceInstrument_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -528,18 +535,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_level_",
+                 "  linkify_newsearch('newsearch_level_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -555,18 +553,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_version_",
+                 "  linkify_newsearch('newsearch_version_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -582,18 +571,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_hasInstrument_",
+                 "  linkify_newsearch('newsearch_hasInstrument_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -609,18 +589,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_inPlatform_",
+                 "  linkify_newsearch('newsearch_inPlatform_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -636,18 +607,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_hasSensor_",
+                 "  linkify_newsearch('newsearch_hasSensor_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -663,18 +625,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_hasGoverningOrganization_",
+                 "  linkify_newsearch('newsearch_hasGoverningOrganization_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -690,18 +643,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_inInstrument_",
+                 "  linkify_newsearch('newsearch_inInstrument_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -717,32 +661,45 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_implements_",
+                 "  linkify_newsearch('newsearch_implements_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
         {
-          "pre": "gcis:implementedIn: <font color='blue'>",
+          "pre": "<div id='newsearch_implementedIn_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "gcis:implementedIn: <a>",
           "field": "gcis:implementedIn",
-          "post": "</font>"
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_implementedIn_",
+          "field": "_id",
+          "post": "');});<\/script>"
         }
       ],
       [
         {
-          "pre": "eos:describedBy: <font color='blue'>",
+          "pre": "<div id='newsearch_describedBy_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "eos:describedBy: <a>",
           "field": "eos:describedBy",
-          "post": "</font>"
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_describedBy_",
+          "field": "_id",
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -758,18 +715,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_usesSoftware_",
+                 "  linkify_newsearch('newsearch_usesSoftware_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -785,18 +733,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_wasAssociatedWith_",
+                 "  linkify_newsearch('newsearch_wasAssociatedWith_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -812,89 +751,27 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_runTimeContext_",
+                 "  linkify_newsearch('newsearch_runTimeContext_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
         {
-          "pre": "<div id='newsearch_used_",
+          "pre": "<div id='newsearch_pid_",
           "field": "_id",
-          "post": "'></div><script>$(function() {\n" +
-                  "  var list_data = [];\n"
+          "post": "'>"
         },
         {
-          "pre": "  list_data = ",
-          "field": "prov:used",
-          "post": ";\n"
-        },
-        {
-          "pre": "  var id='",
-          "field": "_id",
-          "post": "';\n" +
-                  "  var ns_div = $(jq('newsearch_used_' + id));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  $(ns_div).append('prov:used: ');\n" +
-                  "  if (list_data.length > 0) {\n" +
-                  "    for (var i=0; i<list_data.length; i++) {\n" +
-                  "      var link = $('<a>' + list_data[i] + '</a>');\n" +
-                  "      $(ns_div).append(link);\n" +
-                  '      link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + list_data[i] + \'\\\\""}}}\');\n' +
-                  "      $(ns_div).append('<br/>');\n" +
-                  "    }\n" +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_generated_",
-          "field": "_id",
-          "post": "'></div><script>$(function() {\n" +
-                  "  var list_data = [];\n"
-        },
-        {
-          "pre": "  list_data = ",
-          "field": "prov:generated",
-          "post": ";\n"
-        },
-        {
-          "pre": "  var id='",
-          "field": "_id",
-          "post": "';\n" +
-                  "  var ns_div = $(jq('newsearch_generated_' + id));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  $(ns_div).append('prov:generated: ');\n" +
-                  "  if (list_data.length > 0) {\n" +
-                  "    for (var i=0; i<list_data.length; i++) {\n" +
-                  "      var link = $('<a>' + list_data[i] + '</a>');\n" +
-                  "      $(ns_div).append(link);\n" +
-                  '      link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + list_data[i] + \'\\\\""}}}\');\n' +
-                  "      $(ns_div).append('<br/>');\n" +
-                  "    }\n" +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "hysds:pid: <font color='blue'>",
+          "pre": "hysds:pid: <a>",
           "field": "hysds:pid",
-          "post": "</font>"
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_pid_",
+          "field": "_id",
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -910,32 +787,45 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ns_div = $(jq('newsearch_host_",
+                 "  linkify_newsearch('newsearch_host_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ns_div).next('br').remove();\n" +
-                  "  var link = $(ns_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ns_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
         {
-          "pre": "eos:hasRuntimeParameter: <font color='blue'>",
+          "pre": "<div id='newsearch_hasRuntimeParameter_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "eos:hasRuntimeParameter: <a>",
           "field": "eos:hasRuntimeParameter",
-          "post": "</font>"
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_hasRuntimeParameter_",
+          "field": "_id",
+          "post": "');});<\/script>"
         }
       ],
       [
         {
-          "pre": "prov:time: <font color='blue'>",
+          "pre": "<div id='newsearch_provtime_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "prov:time: <a>",
           "field": "prov:time",
-          "post": "</font>"
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_provtime_",
+          "field": "_id",
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -951,18 +841,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var act_div = $(jq('newsearch_activity_",
+                 "  linkify_newsearch('newsearch_activity_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(act_div).next('br').remove();\n" +
-                  "  var link = $(act_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(act_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -978,18 +859,9 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var ent_div = $(jq('newsearch_entity_",
+                 "  linkify_newsearch('newsearch_entity_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(ent_div).next('br').remove();\n" +
-                  "  var link = $(ent_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(ent_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
@@ -1005,32 +877,45 @@ jQuery(document).ready(function($) {
         },
         {
           "pre": "</div><script>$(function() {\n" +
-                 "  var col_div = $(jq('newsearch_collection_",
+                 "  linkify_newsearch('newsearch_collection_",
           "field": "_id",
-          "post": "'));\n" +
-                  "  $(col_div).next('br').remove();\n" +
-                  "  var link = $(col_div).find('a');\n" +
-                  "  if (link.length > 0) {\n" +
-                  "    var link_text = link.text();\n" +
-                  '    link.attr("href", \'?source={"query":{"query_string":{"query":"\\\\"\' + link_text + \'\\\\""}}}\');\n' +
-                  "  }else {\n" +
-                  "    $(col_div).remove();\n" +
-                  "  }\n" +
-                  "});<\/script>"
+          "post": "');});<\/script>"
         }
       ],
       [
         {
-          "pre": "prov:startTime: <font color='blue'>",
+          "pre": "<div id='newsearch_provstartTime_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "prov:startTime: <a>",
           "field": "prov:startTime",
-          "post": "</font>"
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_provstartTime_",
+          "field": "_id",
+          "post": "');});<\/script>"
         }
       ],
       [
         {
-          "pre": "prov:endTime: <font color='blue'>",
+          "pre": "<div id='newsearch_provendTime_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "prov:endTime: <a>",
           "field": "prov:endTime",
-          "post": "</font>"
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_provendTime_",
+          "field": "_id",
+          "post": "');});<\/script>"
         }
       ],
       [
