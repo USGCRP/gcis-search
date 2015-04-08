@@ -305,11 +305,11 @@ jQuery(document).ready(function($) {
           "pre": "<strong id='header_",
           "field": "_id",
           "post": "'></strong><script>$(function() {\n" +
-                  "  var title = null;\n"
+                  "  var label = null;\n"
         },
         {
-          "pre": "  title = '",
-          "field": "dcterms:title",
+          "pre": "  label = '",
+          "field": "prov:label",
           "post": "';\n"
         },
         {
@@ -317,8 +317,8 @@ jQuery(document).ready(function($) {
           "field": "_id",
           "post": "';\n" +
                  "  var strong = $(jq('header_' + id));\n" +
-                  "  if (title !== null) {\n" +
-                  "    strong.text(title);\n" +
+                  "  if (label !== null) {\n" +
+                  "    strong.text(label);\n" +
                   "  }else {\n" +
                   "    strong.text(id);\n" +
                   "  }\n" +
