@@ -89,19 +89,24 @@ def get_image_prov(j, gcis_url):
             doc.hadMember(chapter_id, figure_id)
         doc.hadMember(figure_id, img_id)
 
-    # create agents
+    # create agents or organizations
     agent_ids = []
     for cont in j.get('contributors', []):
         # replace slashes because we get prov.model.ProvExceptionInvalidQualifiedName errors
         agent_id = "gcis:%s" % cont['uri'][1:].replace('/', '-')
-        agent_name  = " ".join([cont['person'][i] for i in
-                               ('first_name', 'middle_name', 'last_name')
-                               if cont['person'].get(i, None) is not None])
-        doc.agent(agent_id, [
-            ( "prov:type", "gcis:Person" ),
-            ( "prov:label", agent_name ),
-            ( "prov:location", "%s%s" % (gcis_url, cont['uri']) ),
-        ])
+
+        # organization
+        if len(cont['organization']) > 0:
+            doc.governingOrganization(agent_id, cont['organization']['name'])
+        else:
+            agent_name  = " ".join([cont['person'][i] for i in
+                                   ('first_name', 'middle_name', 'last_name')
+                                   if cont['person'].get(i, None) is not None])
+            doc.agent(agent_id, [
+                ( "prov:type", "gcis:Person" ),
+                ( "prov:label", agent_name ),
+                ( "prov:location", "%s%s" % (gcis_url, cont['uri']) ),
+            ])
         agent_ids.append(agent_id)
 
     # create activity
