@@ -202,6 +202,19 @@ function linkify_newsearch(id) {
 }
 
 
+function get_icon(concept) {
+  if (concept === "entity") {
+    return "<img src='{{ url_for('static', filename='facetview/img/entity.png') }}' class='img-rounded'/>";
+  }else if (concept === "activity") {
+    return "<img src='{{ url_for('static', filename='facetview/img/activity.png') }}' class='img-rounded'/>";
+  }else if (concept === "agent") {
+    return "<img src='{{ url_for('static', filename='facetview/img/agent.png') }}' class='img-rounded'/>";
+  }else {
+    return "<img src='{{ url_for('static', filename='facetview/img/relation.png') }}' class='img-rounded'/>";
+  }
+}
+
+
 // global backdrop
 var backdrop = null;
 
@@ -302,14 +315,15 @@ jQuery(document).ready(function($) {
           "pre": "  var id='",
           "field": "_id",
           "post": "';\n" +
-                 "  var strong = $(jq('concept_' + id));\n" +
+                  "  var strong = $(jq('concept_' + id));\n" +
+                  "  $(get_icon(concept)).insertBefore(strong);\n" +
                   "  if (prov_type !== null) {\n" +
                   "    if (prov_type[0] == '{') {\n" +
                   "      prov_type = JSON.parse(prov_type)['$'];\n" +
                   "    }\n" +
-                  "    strong.text('(' + concept + ' - ' + prov_type + ') ');\n" +
+                  "    strong.text(' (' + prov_type + ') ');\n" +
                   "  }else {\n" +
-                  "    strong.text('(' + concept + ') ');\n" +
+                  "    strong.text(' (' + concept + ') ');\n" +
                   "  }\n" +
                   "});\n" +
                   "<\/script>"
