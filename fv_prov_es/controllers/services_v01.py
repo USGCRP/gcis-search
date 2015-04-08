@@ -240,10 +240,10 @@ SAMPLE_PROV_ES_JSON = """{
   }, 
   "entity": {
     "ex1:file-1": {
-      "gcis:downloadURL": "http://path/to/my/input-file"
+      "prov:location": "http://path/to/my/input-file"
     }, 
     "ex1:md5sum-file": {
-      "gcis:downloadURL": "http://path/to/my/output-file"
+      "prov:location": "http://path/to/my/output-file"
     }
   }, 
   "activity": {
