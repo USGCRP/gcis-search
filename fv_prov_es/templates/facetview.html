@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='facetview/vendor/bootstrap-2.3.2/css/bootstrap-responsive.min.css') }}">
   <script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/bootstrap-2.3.2/js/bootstrap.min.js') }}"></script>  
 
-  <script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/linkify/1.0/jquery.linkify-1.0-min.js') }}"></script>  
+  <script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/linkify/1.1/jquery.linkify.min.js') }}"></script>  
   
   <link rel="stylesheet" href="{{ url_for('static', filename='facetview/vendor/jquery-ui-1.8.18.custom/jquery-ui-1.8.18.custom.css') }}">
   <script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/jquery-ui-1.8.18.custom/jquery-ui-1.8.18.custom.min.js') }}"></script>
@@ -488,20 +488,9 @@ jQuery(document).ready(function($) {
       ],
       [
         {
-          "pre": "<div id='newsearch_provlocation_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "prov:location: <a>",
+          "pre": "prov:location: <font color='blue'>",
           "field": "prov:location",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_provlocation_",
-          "field": "_id",
-          "post": "');});<\/script>"
+          "post": "</font>"
         }
       ],
       [
