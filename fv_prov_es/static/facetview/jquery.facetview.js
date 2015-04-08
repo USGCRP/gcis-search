@@ -1904,7 +1904,7 @@ search box - the end user will not know they are happening.
         thefacetview += '<button class="btn" id="toggle_agent_labels">Agent Labels</button>&nbsp;';
         thefacetview += '<button class="btn" id="toggle_activity_labels">Activity Labels</button>&nbsp;';
         thefacetview += '<button class="btn" id="toggle_entity_labels">Entity Labels</button>&nbsp;';
-        thefacetview += '<button class="btn" id="toggle_path_labels">Property Labels</button>';
+        thefacetview += '<button class="btn" id="toggle_path_labels">Relation Labels</button>';
         thefacetview += '</div><br/>';
         thefacetview += '<div class="facetview_plots_container"><div id="chart"/></div><br/>';
         thefacetview += options.searchwrap_start + options.searchwrap_end;
