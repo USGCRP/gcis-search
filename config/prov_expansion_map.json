@@ -28,7 +28,7 @@
     },
     "gcis:hasGoverningOrganization": {
       "type": "agent",
-      "source": true
+      "source": false
     },
     "gcis:hasInstrument": {
       "type": "entity",
