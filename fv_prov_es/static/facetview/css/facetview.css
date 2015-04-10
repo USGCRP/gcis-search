@@ -3,6 +3,9 @@
     -webkit-border-radius: 0px;
     border-radius: 0px;
 }
+.facetview_filters{
+    table-layout:fixed;
+}
 #facetview_filters h3{
     margin:40px 0 20px 0;
 }
@@ -50,6 +53,7 @@
 .facetview_filterchoice{
     text-decoration:none;
     color:#373737;
+    word-wrap: break-word;
 }
 .facetview_filterselected{
 }
