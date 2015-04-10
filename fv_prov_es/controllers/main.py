@@ -87,29 +87,29 @@ def expand_activity_prov(a, act, pem, pej, nodes, viz_dict, associations, a2e_re
         obj_type = pem['activity'][pred]['type']
         obj_is_source = pem['activity'][pred]['source']
         if pred in act:
-            obj_id = act[pred]
-            if obj_id in pej.get(obj_type, {}):
-                obj_doc = pej[obj_type][obj_id]
-            else:
-                obj_doc = get_prov_es_json(obj_id)['_source']['prov_es_json'][obj_type][obj_id]
-            viz_dict['nodes'].append(D3_NODE_FUNC[obj_type](obj_id, obj_doc))
-            nodes.append(obj_id)
-            if obj_type == "agent": links_ref = associations
-            elif obj_type == "entity": links_ref = a2e_relations
-            else: links_ref = None
-            if links_ref is not None:
-                if obj_is_source:
-                    links_ref.append({
-                        'source': obj_id,
-                        'target': a,
-                        'concept': pred,
-                    })
+            for obj_id in act[pred].split(','):
+                if obj_id in pej.get(obj_type, {}):
+                    obj_doc = pej[obj_type][obj_id]
                 else:
-                    links_ref.append({
-                        'source': a,
-                        'target': obj_id,
-                        'concept': pred,
-                    })
+                    obj_doc = get_prov_es_json(obj_id)['_source']['prov_es_json'][obj_type][obj_id]
+                viz_dict['nodes'].append(D3_NODE_FUNC[obj_type](obj_id, obj_doc))
+                nodes.append(obj_id)
+                if obj_type == "agent": links_ref = associations
+                elif obj_type == "entity": links_ref = a2e_relations
+                else: links_ref = None
+                if links_ref is not None:
+                    if obj_is_source:
+                        links_ref.append({
+                            'source': obj_id,
+                            'target': a,
+                            'concept': pred,
+                        })
+                    else:
+                        links_ref.append({
+                            'source': a,
+                            'target': obj_id,
+                            'concept': pred,
+                        })
         
 
 def expand_entity_prov(e, ent, pem, pej, nodes, viz_dict, e2e_relations):
@@ -119,28 +119,28 @@ def expand_entity_prov(e, ent, pem, pej, nodes, viz_dict, e2e_relations):
         obj_type = pem['entity'][pred]['type']
         obj_is_source = pem['entity'][pred]['source']
         if pred in ent:
-            obj_id = ent[pred]
-            if obj_id in pej.get(obj_type, {}):
-                obj_doc = pej[obj_type][obj_id]
-            else:
-                obj_doc = get_prov_es_json(obj_id)['_source']['prov_es_json'][obj_type][obj_id]
-            viz_dict['nodes'].append(D3_NODE_FUNC[obj_type](obj_id, obj_doc))
-            nodes.append(obj_id)
-            if obj_type in ("agent", "entity"): links_ref = e2e_relations
-            else: links_ref = None
-            if links_ref is not None:
-                if obj_is_source:
-                    links_ref.append({
-                        'source': obj_id,
-                        'target': e,
-                        'concept': pred,
-                    })
+            for obj_id in ent[pred].split(','):
+                if obj_id in pej.get(obj_type, {}):
+                    obj_doc = pej[obj_type][obj_id]
                 else:
-                    links_ref.append({
-                        'source': e,
-                        'target': obj_id,
-                        'concept': pred,
-                    })
+                    obj_doc = get_prov_es_json(obj_id)['_source']['prov_es_json'][obj_type][obj_id]
+                viz_dict['nodes'].append(D3_NODE_FUNC[obj_type](obj_id, obj_doc))
+                nodes.append(obj_id)
+                if obj_type in ("agent", "entity"): links_ref = e2e_relations
+                else: links_ref = None
+                if links_ref is not None:
+                    if obj_is_source:
+                        links_ref.append({
+                            'source': obj_id,
+                            'target': e,
+                            'concept': pred,
+                        })
+                    else:
+                        links_ref.append({
+                            'source': e,
+                            'target': obj_id,
+                            'concept': pred,
+                        })
         
 
 @cache.cached(timeout=1000)
