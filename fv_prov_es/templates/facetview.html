@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>{{ config['TITLE'] }}</title>
+  <title>{{ title }}</title>
 
   <script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/jquery/1.7.2/jquery-1.7.2.min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='jquery-validation-1.12.0/dist/jquery.validate.js') }}"></script>
@@ -1602,7 +1602,7 @@ jQuery(document).ready(function($) {
 <div class="navbar navbar-fixed-top">
   <div class="navbar-inner">
     <div class="container">
-      <a class="brand" href="#">{{ config['TITLE'] }}</a>
+      <a class="brand" href="#">{{ title }}</a>
       <ul class="nav">
         <li><a href="{{ url_for('.home') }}">Home</a></li>
         <li><a href="{{ url_for('api_v0-1.doc') }}">API</a></li>
@@ -1636,7 +1636,7 @@ jQuery(document).ready(function($) {
   <div class="content">
     <div class="page-header">
       <h1>
-        {{ config['TITLE'] }} <small>{{ config['DESCRIPTION'] }}</small>
+        {{ title }} <small>{{ description }}</small>
       </h1>
     </div>
 

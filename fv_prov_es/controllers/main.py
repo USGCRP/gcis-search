@@ -24,7 +24,8 @@ D3_NODE_FUNC = {
 @cache.cached(timeout=1000)
 def home():
     return render_template('facetview.html',
-                           title='PROV-ES FacetView',
+                           title=current_app.config['TITLE'],
+                           description=current_app.config['DESCRIPTION'],
                            current_year=datetime.now().year)
 
 
