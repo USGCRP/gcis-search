@@ -116,8 +116,7 @@ def get_image_prov(j, gcis_url):
         input_id = "gcis:%s" % parent['url'][1:].replace('/', '-')
         input_name = parent['label']
         doc.entity(input_id, [
-            #( "prov:type", "gcis:Dataset" ),
-            ( "prov:type", "eos:dataset", ),
+            ( "prov:type", "gcis:Dataset" ),
             ( "prov:label", input_name ),
             ( "prov:location", "%s%s" % (gcis_url, parent['url']) ),
         ])
