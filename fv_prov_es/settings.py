@@ -12,6 +12,10 @@ class Config(object):
     # concept expansion mapping
     PROV_EXPANSION_CFG = "../config/prov_expansion_map.json"
 
+    # title and descriptions
+    TITLE = "PROV-ES Facet Search"
+    DESCRIPTION = "faceted search interface for earth science provenance"
+
 
 class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///../database.db'
