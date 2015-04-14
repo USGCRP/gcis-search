@@ -18,6 +18,9 @@ var MONTHS = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
+var FDL_DATA_URL = window.location.pathname + "/fdl/data";
+if (/\/$/.test(window.location.pathname))
+  FDL_DATA_URL = window.location.pathname + "fdl/data";
 var ajax_request = null;
               
 
@@ -1216,7 +1219,7 @@ search box - the end user will not know they are happening.
                  options.linkify ? $('#facetview_results tr:last-child', obj).linkify() : false;
 
                 // add to chart
-                addViz(value['_id'], "fdl/data");
+                addViz(value['_id'], FDL_DATA_URL);
             });
             if ( options.result_box_colours.length > 0 ) {
                 jQuery('.result_box', obj).each(function () {
@@ -1500,7 +1503,7 @@ search box - the end user will not know they are happening.
                 delete qs.facets;
                 options.querystring = JSON.stringify(qs)
             }
-            options.sharesave_link ? $('.facetview_sharesaveurl', obj).val('http://' + window.location.host + window.location.pathname + '?source=' + options.querystring) : "";
+            options.sharesave_link ? $('.facetview_sharesaveurl', obj).val(window.location.protocol + '//' + window.location.host + window.location.pathname + '?source=' + options.querystring) : "";
             return qy;
         };
 
