@@ -137,7 +137,7 @@
   <script type="text/javascript">
 
 function jq( myid ) {
-  return "#" + myid.replace( /(:|\.|\[|\])/g, "\\$1" );
+  return "#" + myid.replace( /(:|\.|\[|\]|\/)/g, "\\$1" );
 }
 
 function set_left_margin() {
@@ -175,7 +175,7 @@ function show_prov_es_ttl() {
     url: "{{ url_for('api_v0-1.prov_es_ttl') }}",
     data: { id: id },
     success: function(data, sts, xhr) {
-      console.log(data);
+      //console.log(data);
       var ttl = data['result'].replace(/</g, '&lt;').replace(/>/g, '&gt;');
       $('#prov_es_ttl_text').html('<pre>' + ttl + '</pre>');
       $('#prov_es_ttl_modal').modal('show').css({'left': set_left_margin});
