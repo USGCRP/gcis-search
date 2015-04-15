@@ -1,6 +1,6 @@
 class Config(object):
     SECRET_KEY = 'secret key'
-    ES_URL = 'http://127.0.0.1:5001' # default port is 9200
+    ES_URL = 'http://127.0.0.1:9200' # default port is 9200
 
     # for PROVES app
     PROVES_ES_PREFIX = 'prov_es'
@@ -13,9 +13,9 @@ class Config(object):
     PROV_EXPANSION_CFG = "../config/prov_expansion_map.json"
 
     # title and descriptions
-    TITLE = "PROV-ES Facet Search"
-    DESCRIPTION = "faceted search interface for earth science provenance"
-    BADGE = "BETA"
+    TITLE = "GCIS Provenance"
+    DESCRIPTION = "PROV-ES faceted search interface for GCIS"
+    BADGE = "DEV"
 
 
 class ProdConfig(Config):
