@@ -25,6 +25,7 @@ D3_NODE_FUNC = {
 def home():
     return render_template('facetview.html',
                            title=current_app.config['TITLE'],
+                           badge=current_app.config['BADGE'],
                            description=current_app.config['DESCRIPTION'],
                            current_year=datetime.now().year)
 
@@ -77,6 +78,7 @@ def fdl():
 
     return render_template('fdl.html',
                            title='PROV-ES Lineage Graph',
+                           badge=current_app.config['BADGE'],
                            id=id,
                            current_year=datetime.now().year)
 
