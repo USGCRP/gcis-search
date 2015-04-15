@@ -7,6 +7,10 @@
     "eos:usesSoftware":{
       "type": "entity",
       "source": false
+    },
+    "eos:runtimeContext":{
+      "type": "entity",
+      "source": false
     }
   },
   "entity": {
