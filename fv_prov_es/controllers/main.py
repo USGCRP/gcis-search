@@ -90,7 +90,8 @@ def expand_activity_prov(a, act, pem, pej, nodes, viz_dict, associations, a2e_re
         obj_type = pem['activity'][pred]['type']
         obj_is_source = pem['activity'][pred]['source']
         if pred in act:
-            for obj_id in act[pred].split(','):
+            obj_ids = act[pred] if isinstance(act[pred], (types.ListType, types.TupleType)) else [act[pred]]
+            for obj_id in obj_ids:
                 if obj_id in pej.get(obj_type, {}):
                     obj_doc = pej[obj_type][obj_id]
                 else:
@@ -122,7 +123,8 @@ def expand_entity_prov(e, ent, pem, pej, nodes, viz_dict, e2e_relations):
         obj_type = pem['entity'][pred]['type']
         obj_is_source = pem['entity'][pred]['source']
         if pred in ent:
-            for obj_id in ent[pred].split(','):
+            obj_ids = ent[pred] if isinstance(ent[pred], (types.ListType, types.TupleType)) else [ent[pred]]
+            for obj_id in obj_ids:
                 if obj_id in pej.get(obj_type, {}):
                     obj_doc = pej[obj_type][obj_id]
                 else:
