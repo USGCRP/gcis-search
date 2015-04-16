@@ -1602,7 +1602,7 @@ jQuery(document).ready(function($) {
 <div class="navbar navbar-fixed-top">
   <div class="navbar-inner">
     <div class="container">
-      <a class="brand" href="#">{{ title }}<span class="badge badge-important">{{ badge }}</span></a>
+      <a class="brand" href="#">{{ title }}<span class="badge badge-important" style="position:relative;top:-10px;">{{ badge }}</span></a>
       <ul class="nav">
         <li><a href="{{ url_for('.home') }}">Home</a></li>
         <li><a href="{{ url_for('api_v0-1.doc') }}">API</a></li>
