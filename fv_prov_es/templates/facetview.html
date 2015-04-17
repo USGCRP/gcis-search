@@ -202,6 +202,19 @@ function linkify_newsearch(id) {
 }
 
 
+function linkify_mozart_url(id, mozart_url, job_id, job_type) {
+  var ns_div = $(jq('mozart_url_' + id));
+  $(ns_div).next('br').remove();
+  var link = $(ns_div).find('a');
+  if (mozart_url !== null && job_id !== null && job_type !== null) {
+    var link_text = link.text(job_id);
+    link.attr("href", mozart_url + '?source={"query":{"bool":{"must":[{"term":{"job.job.type":"' + job_type + '"}},{"query_string":{"query":"\\"' + job_id + '\\""}}]}}}');
+  }else {
+    $(ns_div).remove();
+  }
+}
+
+
 function get_icon(concept) {
   if (concept === "entity") {
     return "<img src='{{ url_for('static', filename='facetview/img/entity.png') }}' class='img-rounded'/>";
@@ -496,6 +509,38 @@ jQuery(document).ready(function($) {
           "pre": "",
           "field": "hysds:job_url",
           "post": "</a>"
+        }
+      ],
+      [
+        {
+          "pre": "<div id='mozart_url_",
+          "field": "_id",
+          "post": "'>hysds:mozart_url: <a target='_blank'/></div><script>$(function() {\n" +
+                  "  var mozart_url = null;\n" +
+                  "  var job_id = null;\n" +
+                  "  var job_type = null;\n"
+        },
+        {
+          "pre": "  mozart_url = '",
+          "field": "hysds:mozart_url",
+          "post": "';\n"
+        },
+        {
+          "pre": "  job_id = '",
+          "field": "hysds:job_id",
+          "post": "';\n"
+        },
+        {
+          "pre": "  job_type = '",
+          "field": "hysds:job_type",
+          "post": "';\n"
+        },
+        {
+          "pre": "  var id = '",
+          "field": "_id",
+          "post": "';\n" +
+                  " linkify_mozart_url(id, mozart_url, job_id, job_type);\n" +
+                  "});<\/script>"
         }
       ],
       [
