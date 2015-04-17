@@ -280,6 +280,36 @@ def parse_d3(pej):
             'concept': hm.get('prov:type', 'prov:hadMember'),
             'doc': hm,
         })
+        
+    # add association links
+    for w in pej.get('wasAssociatedWith', {}):
+        waw = pej['wasAssociatedWith'][w]
+
+        # get activity
+        a = waw['prov:activity']
+        if a in pej.get('activity', {}):
+            act = pej['activity'][a]
+        else:
+            act = get_prov_es_json(a)['_source']['prov_es_json']['activity'][a]
+        viz_dict['nodes'].append(get_activity_node(a, act))
+        nodes.append(a)
+        expand_activity_prov(a, act, pem, pej, nodes, viz_dict, associations, a2e_relations)
+        
+        # get agent
+        ag = waw['prov:agent']
+        if ag in pej.get('agent', {}):
+            agent = pej['agent'][ag]
+        else:
+            agent = get_prov_es_json(ag)['_source']['prov_es_json']['agent'][ag]
+        viz_dict['nodes'].append(get_agent_node(ag, agent))
+        nodes.append(ag)
+        #expand_agent_prov(ag, agent, pem, pej, nodes, viz_dict, associations)
+
+        associations.append({
+            'source': ag,
+            'target': a,
+            'doc': waw,
+        })
 
     # modify color of entities that are inputs and outputs or just outputs
     new_nodes = []

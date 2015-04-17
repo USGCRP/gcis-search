@@ -1,9 +1,5 @@
 {
   "activity": {
-    "prov:wasAssociatedWith": {
-      "type": "agent",
-      "source": true
-    },
     "eos:usesSoftware":{
       "type": "entity",
       "source": false
