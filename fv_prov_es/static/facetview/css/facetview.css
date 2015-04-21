@@ -78,4 +78,12 @@
     text-decoration:none;
     margin:0 5px 0 5px;
 }
+.facetview_fdl_container{
+    border:1px solid #ccc; 
+    padding:10px; 
+    margin-bottom:5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+}
 

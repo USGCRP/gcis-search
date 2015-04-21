@@ -1902,6 +1902,7 @@ search box - the end user will not know they are happening.
 
         thefacetview += '<div style="clear:both;" class="btn-toolbar" id="facetview_selectedfilters"></div>';
         options.pager_on_top ? thefacetview += '<div class="facetview_metadata" style="margin-top:20px;"></div>' : "";
+        thefacetview += '<div class="facetview_fdl_container">';
         thefacetview += '<div class="facetview_labeltoggles_container">';
         thefacetview += '<button class="btn" id="toggle_force">Force</button>&nbsp;';
         thefacetview += '<button class="btn" id="toggle_agent_labels">Agent Labels</button>&nbsp;';
@@ -1909,7 +1910,7 @@ search box - the end user will not know they are happening.
         thefacetview += '<button class="btn" id="toggle_entity_labels">Entity Labels</button>&nbsp;';
         thefacetview += '<button class="btn" id="toggle_path_labels">Relation Labels</button>';
         thefacetview += '</div><br/>';
-        thefacetview += '<div class="facetview_plots_container"><div id="chart" class="img-rounded" /></div><br/>';
+        thefacetview += '<div class="facetview_plots_container"><div id="chart" class="img-rounded" /></div></div><br/>';
         thefacetview += options.searchwrap_start + options.searchwrap_end;
         thefacetview += '<div class="facetview_metadata"></div></div></div></div>';
 
