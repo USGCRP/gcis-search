@@ -769,7 +769,11 @@ function click(d) {
       if (doc[k].constructor === Array) {
         var val = doc[k].join(", ");
       }else {
-        var val = doc[k];
+        if (doc[k] === Object(doc[k]) && k == "prov:type") {
+          var val = doc[k]['$'];
+        }else { 
+          var val = doc[k];
+        }
       }
       html += "<tr><td><b>" + k + "</b></td><td>" + val + "</td></tr>";
     }
