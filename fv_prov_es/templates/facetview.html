@@ -142,10 +142,6 @@ var width = null,
 function get_height() { return 500; }
 
 
-function jq( myid ) {
-  return "#" + myid.replace( /(:|\.|\[|\]|\/)/g, "\\$1" );
-}
-
 function set_left_margin() {
   return ($(window).width() - $(this).width())/2;
 }

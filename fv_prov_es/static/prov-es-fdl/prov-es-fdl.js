@@ -37,6 +37,12 @@ var hideLabel = {
 var showHumanReadable = true;
 
 
+// helper to escape special chars in ID
+function jq( myid ) {
+  return "#" + myid.replace( /(:|\.|\[|\]|\/)/g, "\\$1" );
+}
+
+
 // return random integer between 2 numbers
 function rand_int(min, max) {
   return Math.floor(Math.random()*(max-min+1)+min);
