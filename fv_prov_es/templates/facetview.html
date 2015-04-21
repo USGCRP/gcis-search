@@ -589,6 +589,42 @@ jQuery(document).ready(function($) {
       ],
       [
         {
+          "pre": "<div id='newsearch_shortname_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "eos:shortName: <a>",
+          "field": "eos:shortName",
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_shortname_",
+          "field": "_id",
+          "post": "');});<\/script>"
+        }
+      ],
+      [
+        {
+          "pre": "<div id='newsearch_longname_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "eos:longName: <a>",
+          "field": "eos:longName",
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_longname_",
+          "field": "_id",
+          "post": "');});<\/script>"
+        }
+      ],
+      [
+        {
           "pre": "<div id='newsearch_level_",
           "field": "_id",
           "post": "'>"
