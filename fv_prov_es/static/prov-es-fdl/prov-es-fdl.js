@@ -766,30 +766,14 @@ function click(d) {
   //console.log(clickedNode);
   //console.log(d);
   var doc = d.doc;
-  var html = "<table class='table table-striped table-bordered' id='prov_es_info_tbl'>";
   var title = d.id;
-  for (var k in doc) {
-    if (doc.hasOwnProperty(k)) {
-      //console.log(k, doc[k]);
-      if (k === "prov:label") title = doc[k];
-      if (doc[k].constructor === Array) {
-        var val = doc[k].join(", ");
-      }else {
-        if (doc[k] === Object(doc[k]) && k == "prov:type") {
-          var val = doc[k]['$'];
-        }else { 
-          var val = doc[k];
-        }
-      }
-      html += "<tr><td><b>" + k + "</b></td><td>" + val + "</td></tr>";
-    }
-  }
-  html += "</table";
+  var info_table = get_info_table(doc);
+  if (info_table.title !== null) title = info_table.title;
   $('#prov_es_info_modal_label').text(title);
   //var json_str = JSON.stringify(d.doc, null, '  ');
   //$('#prov_es_info_text').html('<pre>' + json_str + '</pre>');
-  $('#prov_es_info_text').html(html);
-  $('#prov_es_info_tbl').linkify();
+  $('#prov_es_info_text').html(info_table.html);
+  $('.prov_es_info_table').linkify();
   $('#prov_es_info_modal').modal('show').css({'left': set_left_margin});
 }
 
@@ -809,4 +793,28 @@ function dblclick(d) {
       alert("Error: " + xhr.responseText);
     }
   });
+}
+
+
+function get_info_table(doc) {
+  var html = "<table class='table table-striped table-bordered prov_es_info_table'>";
+  var title = null;
+  for (var k in doc) {
+    if (doc.hasOwnProperty(k)) {
+      //console.log(k, doc[k]);
+      if (k === "prov:label") title = doc[k];
+      if (doc[k].constructor === Array) {
+        var val = doc[k].join(", ");
+      }else {
+        if (doc[k] === Object(doc[k]) && k == "prov:type") {
+          var val = doc[k]['$'];
+        }else { 
+          var val = doc[k];
+        }
+      }
+      html += "<tr><td><b>" + k + "</b></td><td>" + val + "</td></tr>";
+    }
+  }
+  html += "</table";
+  return { title: title, html:html };
 }
