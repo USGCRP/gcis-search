@@ -62,7 +62,23 @@
 <script type="text/javascript" src="{{ url_for('static', filename='prov-es-fdl/prov-es-fdl.js') }}"></script>
 <script>
 
+// canvas attributes and height determination function
+var width = null,
+    height = null;
+function get_height() {
+ return window.innerHeight -
+        parseInt($('body').css('padding-top').replace("px", "")) +
+        parseInt($('body').css('padding-bottom').replace("px", ""));
+}
+
+
 jQuery(document).ready(function($) {
+
+  // set canvas attributes
+  width = $('#chart').innerWidth();
+  height = get_height();
+
+
   tip = d3.tip()
       .attr('class', 'd3-tip')
       .offset([100, 0])

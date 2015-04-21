@@ -1,9 +1,5 @@
 // set canvas attributes
-var width = $('#chart').innerWidth(),
-    height = window.innerHeight - 
-             parseInt($('body').css('padding-top').replace("px", "")) + 
-             parseInt($('body').css('padding-bottom').replace("px", "")),
-    radiusLength = 15,
+var radiusLength = 15,
     polyLength = 10,
     rectLength = 18,
     markerLength = 6;
@@ -135,9 +131,7 @@ function set_left_margin() {
 // resize canvas
 function resize() {
   width = $('#chart').innerWidth();
-  height = window.innerHeight - 
-           parseInt($('body').css('padding-top').replace("px", "")) + 
-           parseInt($('body').css('padding-bottom').replace("px", ""));
+  height = get_height();
   svg.attr("width", width).attr("height", height);
   force.size([width, height]).resume();
 }
@@ -253,68 +247,80 @@ function link_a2e_related(src_x, src_y, tgt_x, tgt_y, do_curve) {
 
 // Use elliptical arc path segments to doubly-encode directionality.
 function tick() {
-  pathGroup.selectAll("path").attr("d", function(d) {
-    if (d.type == "wasGeneratedBy") {
-      return link_wasGeneratedBy(d.source.x, d.source.y, d.target.x, d.target.y, false);
-    }
-    if (d.type == "used") {
-      return link_used(d.source.x, d.source.y, d.target.x, d.target.y, false);
-    }
-    if (d.type == "associated") {
-      return link_association(d.source.x, d.source.y, d.target.x, d.target.y);
-    }
-    if (d.type == "controlled") {
-      return link_controlled(d.source.x, d.source.y, d.target.x, d.target.y);
-    }
-    if (d.type == "e2e_related") {
-      return link_e2e_related(d.source.x, d.source.y, d.target.x, d.target.y, true);
-    }
-    if (d.type == "a2e_related") {
-      return link_a2e_related(d.source.x, d.source.y, d.target.x, d.target.y, true);
-    }
-  });
+  if (pathGroup) {
+    pathGroup.selectAll("path").attr("d", function(d) {
+      if (d.type == "wasGeneratedBy") {
+        return link_wasGeneratedBy(d.source.x, d.source.y, d.target.x, d.target.y, false);
+      }
+      if (d.type == "used") {
+        return link_used(d.source.x, d.source.y, d.target.x, d.target.y, false);
+      }
+      if (d.type == "associated") {
+        return link_association(d.source.x, d.source.y, d.target.x, d.target.y);
+      }
+      if (d.type == "controlled") {
+        return link_controlled(d.source.x, d.source.y, d.target.x, d.target.y);
+      }
+      if (d.type == "e2e_related") {
+        return link_e2e_related(d.source.x, d.source.y, d.target.x, d.target.y, true);
+      }
+      if (d.type == "a2e_related") {
+        return link_a2e_related(d.source.x, d.source.y, d.target.x, d.target.y, true);
+      }
+    });
+  }
 
-  agentGroup.selectAll("polygon").attr("transform", function(d) {
-    var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
-    var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
-    if (isNaN(x) || isNaN(y)) return null;
-    return "translate(" + x + "," + y + ")";
-  });
+  if (agentGroup) {
+    agentGroup.selectAll("polygon").attr("transform", function(d) {
+      var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
+      var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
+      if (isNaN(x) || isNaN(y)) return null;
+      return "translate(" + x + "," + y + ")";
+    });
+  }
 
-  actsGroup.selectAll("circle").attr("transform", function(d) {
-    var x = Math.max(radiusLength, Math.min(width - radiusLength, d.x));
-    var y = Math.max(radiusLength, Math.min(height - radiusLength, d.y));
-    if (isNaN(x) || isNaN(y)) return null;
-    return "translate(" + x + "," + y + ")";
-  });
+  if (actsGroup) {
+    actsGroup.selectAll("circle").attr("transform", function(d) {
+      var x = Math.max(radiusLength, Math.min(width - radiusLength, d.x));
+      var y = Math.max(radiusLength, Math.min(height - radiusLength, d.y));
+      if (isNaN(x) || isNaN(y)) return null;
+      return "translate(" + x + "," + y + ")";
+    });
+  }
 
-  entsGroup.selectAll("rect").attr("transform", function(d) {
-    var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
-    var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
-    if (isNaN(x) || isNaN(y)) return null;
-    return "translate(" + x + "," + y + ")";
-  });
+  if (entsGroup) {
+    entsGroup.selectAll("rect").attr("transform", function(d) {
+      var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
+      var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
+      if (isNaN(x) || isNaN(y)) return null;
+      return "translate(" + x + "," + y + ")";
+    });
+  }
 
-  nodeTextGroup.selectAll("g").attr("transform", function(d) {
-    var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
-    var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
-    if (isNaN(x) || isNaN(y)) return null;
-    return "translate(" + x + "," + y + ")";
-  });
+  if (nodeTextGroup) {
+    nodeTextGroup.selectAll("g").attr("transform", function(d) {
+      var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
+      var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
+      if (isNaN(x) || isNaN(y)) return null;
+      return "translate(" + x + "," + y + ")";
+    });
+  }
 
-  pathTextGroup.selectAll("g").attr("transform", function(d) {
-    //var bbox = $(jq(d.id)).get()[0].getBBox();
-    //var x = Math.floor(bbox.x + bbox.width/2.0);
-    //var y = Math.floor(bbox.y + bbox.height/2.0); 
-    //if (isNaN(x) || isNaN(y)) return null;
-    //return "translate(" + x + "," + y + ")";
-    if (d.source.x > d.target.x) var x = d.target.x + (d.source.x - d.target.x)/2.;
-    else var x = d.source.x + (d.target.x - d.source.x)/2.;
-    if (d.source.y > d.target.y) var y = d.target.y + (d.source.y - d.target.y)/2.;
-    else var y = d.source.y + (d.target.y - d.source.y)/2.;
-    if (isNaN(x) || isNaN(y)) return null;
-    return "translate(" + x + "," + y + ")";
-  });
+  if (pathTextGroup) {
+    pathTextGroup.selectAll("g").attr("transform", function(d) {
+      //var bbox = $(jq(d.id)).get()[0].getBBox();
+      //var x = Math.floor(bbox.x + bbox.width/2.0);
+      //var y = Math.floor(bbox.y + bbox.height/2.0); 
+      //if (isNaN(x) || isNaN(y)) return null;
+      //return "translate(" + x + "," + y + ")";
+      if (d.source.x > d.target.x) var x = d.target.x + (d.source.x - d.target.x)/2.;
+      else var x = d.source.x + (d.target.x - d.source.x)/2.;
+      if (d.source.y > d.target.y) var y = d.target.y + (d.source.y - d.target.y)/2.;
+      else var y = d.source.y + (d.target.y - d.source.y)/2.;
+      if (isNaN(x) || isNaN(y)) return null;
+      return "translate(" + x + "," + y + ")";
+    });
+  }
 }
 
 
