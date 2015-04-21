@@ -23,8 +23,9 @@ var nodeTextGroup = null;
 var pathTextGroup = null;
 var entsGroup = null;
 var actsGroup = null;
-var dblclickedNode = null;
 var forceEnabled = false;
+var clickedOnce = false;
+var timer;
 
 // concepts to hide label for
 var hideLabel = {
@@ -623,7 +624,7 @@ function restart() {
       }))
     .enter().append("polygon")
       .attr("points", "0,0 " + polyLength*2 + ",0 " + polyLength + "," + polyLength*2)
-      .on("dblclick", dblclick)
+      .on("click", click_dispatcher)
       //.filter(function(d) {
       //    if (hideLabel[d.prov_type]) return true;
       //    return false;
@@ -641,7 +642,7 @@ function restart() {
       }))
     .enter().append("circle")
       .attr("r", radiusLength)
-      .on("dblclick", dblclick)
+      .on("click", click_dispatcher)
       //.filter(function(d) {
       //    if (hideLabel[d.prov_type]) return true;
       //    return false;
@@ -661,7 +662,7 @@ function restart() {
       .attr("class", "entity")
       .attr("width", rectLength)
       .attr("height", rectLength)
-      .on("dblclick", dblclick)
+      .on("click", click_dispatcher)
       //.filter(function(d) {
       //    if (hideLabel[d.prov_type]) return true;
       //    return false;
@@ -738,33 +739,57 @@ function restart() {
   
 }
 
-// handler to open up info window of a node
-function dblclick(d) {
-  dblclickedNode = d3.select(this);
-  //console.log("dblclick");
-  //console.log(dblclickedNode);
-  //console.log(d);
-  /*
-  $('#dblclick_modal_label').text(d.id);
-  var json_str = JSON.stringify(d.doc, null, '  ');
-  $('#dblclick_text').html('<pre>' + json_str + '</pre>');
-  $('#dblclick_modal').modal('show').css({'left': set_left_margin});
-  $('#add_lineage_btn').on('click', function() {
-    $.ajax({
-      url: addVizUrl,
-      data: { id: d.id, lineage: true },
-      success: function(data, sts, xhr) {
-        addNodesAndLinks(data);
-      },
-      error: function(xhr, sts, err) {
-        //console.log(xhr);
-        alert("Error: " + xhr.responseText);
-      }
-    });
-    $('#dblclick_modal').modal('hide');
-  });
-  */
 
+// handler to dispatch to either the click or dblclick handler
+function click_dispatcher(d) {
+  if (d3.event.defaultPrevented) return; // prevent drag from sending click event
+  if (clickedOnce) {
+    dblclick(d);
+  }else {
+    timer = setTimeout(function() {
+      click(d);
+    }, 300);
+    clickedOnce = true; 
+  }
+}
+
+
+// handler to open up info window of a node
+function click(d) {
+  clickedOnce = false;
+  //clickedNode = d3.select(this);
+  //console.log("click");
+  //console.log(clickedNode);
+  //console.log(d);
+  var doc = d.doc;
+  var html = "<table class='table table-striped table-bordered' id='prov_es_info_tbl'>";
+  var title = d.id;
+  for (var k in doc) {
+    if (doc.hasOwnProperty(k)) {
+      //console.log(k, doc[k]);
+      if (k === "prov:label") title = doc[k];
+      if (doc[k].constructor === Array) {
+        var val = doc[k].join(", ");
+      }else {
+        var val = doc[k];
+      }
+      html += "<tr><td><b>" + k + "</b></td><td>" + val + "</td></tr>";
+    }
+  }
+  html += "</table";
+  $('#prov_es_info_modal_label').text(title);
+  //var json_str = JSON.stringify(d.doc, null, '  ');
+  //$('#prov_es_info_text').html('<pre>' + json_str + '</pre>');
+  $('#prov_es_info_text').html(html);
+  $('#prov_es_info_tbl').linkify();
+  $('#prov_es_info_modal').modal('show').css({'left': set_left_margin});
+}
+
+
+// handler to search for lineage of a double-clicked node
+function dblclick(d) {
+  clickedOnce = false;
+  clearTimeout(timer);
   $.ajax({
     url: addVizUrl,
     data: { id: d.id, lineage: true },

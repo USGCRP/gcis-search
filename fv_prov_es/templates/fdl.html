@@ -55,6 +55,7 @@
 <script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/jquery/1.7.2/jquery-1.7.2.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/jquery-ui-1.8.18.custom/jquery-ui-1.8.18.custom.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/bootstrap-2.3.2/js/bootstrap.min.js') }}"></script>  
+<script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/linkify/1.1/jquery.linkify.min.js') }}"></script>  
 <script src="{{ url_for('static', filename='JSON-js/json2.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='d3-3.5.5/d3.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='d3-tip-0.6.3/d3.tip.v0.6.3.js') }}"></script>
@@ -331,22 +332,21 @@ jQuery(document).ready(function($) {
 });
 </script>
 
-<!-- dblclick modal -->
-<div id="dblclick_modal" class="modal hide fade dblclick_modal" tabindex="-1" role="dialog"
-     aria-labelledby="dblclick_modal_label" aria-hidden="true" data-backdrop="static"
-     data-keyboard="false">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="dblclick_modal_label"></h3>
-  </div>
-  <div class="modal-body">
-    <div class="modal-body-div"><label id="dblclick_text" style="display: block;"></label></div>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-success" id="add_lineage_btn">Add Lineage</a>
-    <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
-  </div>
+<!-- prov_es_info modal -->
+<div id="prov_es_info_modal" class="modal hide fade prov_es_info_modal" tabindex="-1" role="dialog"
+  aria-labelledby="prov_es_info_modal_label" aria-hidden="true" data-backdrop="static"
+  data-keyboard="false">
+<div class="modal-header">
+  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+  <h3 id="prov_es_info_modal_label">PROV-ES Info</h3>
 </div>
+<div class="modal-body">
+  <div class="modal-body-div"><label id="prov_es_info_text" style="display: block;"></label></div>
+</div>
+<div class="modal-footer">
+  <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
+</div>
+div>
 
 </body>
 </html>
