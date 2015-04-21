@@ -589,6 +589,24 @@ jQuery(document).ready(function($) {
       ],
       [
         {
+          "pre": "<div id='newsearch_partofcollection_",
+          "field": "_id",
+          "post": "'>"
+        },
+        {
+          "pre": "eos:partOfCollection: <a>",
+          "field": "eos:partOfCollection",
+          "post": "</a>"
+        },
+        {
+          "pre": "</div><script>$(function() {\n" +
+                 "  linkify_newsearch('newsearch_partofcollection_",
+          "field": "_id",
+          "post": "');});<\/script>"
+        }
+      ],
+      [
+        {
           "pre": "<div id='newsearch_shortname_",
           "field": "_id",
           "post": "'>"
