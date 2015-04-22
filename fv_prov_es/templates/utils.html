@@ -1,5 +1,10 @@
   <script type="text/javascript">
 
+function set_left_margin() {
+  return ($(window).width() - $(this).width())/2;
+}
+
+
 function hide_es_info_modal() {
   if ($('#prov_es_info_modal').hasClass('in'))
     $('#prov_es_info_modal').modal('hide');
@@ -83,6 +88,13 @@ jQuery(document).ready(function($) {
   // handler for prov_es_ttl_modal
   $('#prov_es_ttl_modal').on('show', function() {
     $('#prov_es_ttl_modal_download').attr('disabled', false);
+  });
+
+  // handler for proceeding with lineage addition
+  $('#proceed_lineage_btn').on('click', function() {
+    $('#max_lineage_nodes_modal').modal('hide');
+    addNodesAndLinks(lineageData);
+    lineageData = null;
   });
 
 });

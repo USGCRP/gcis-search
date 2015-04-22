@@ -24,6 +24,7 @@ var actsGroup = null;
 var forceEnabled = false;
 var clickedOnce = false;
 var timer;
+var lineageData;
 
 // concepts to hide label for
 var hideLabel = {
@@ -476,6 +477,15 @@ function enableForce() {
 }
 
 
+function getNewNodesCount(json) {
+  var count = 0;
+  json.nodes.forEach(function(n) {
+    if (nodesDict[n.id] === undefined) count++;
+  });
+  return count;
+}
+
+
 function addNodesAndLinks(json) {
   json.nodes.forEach(function(n) {
     if (nodesDict[n.id] === undefined) {
@@ -786,7 +796,15 @@ function dblclick(d) {
     url: addVizUrl,
     data: { id: d.id, lineage: true },
     success: function(data, sts, xhr) {
-      addNodesAndLinks(data);
+      var lineage_count = getNewNodesCount(data);
+      if (lineage_count >= LINEAGE_NODES_MAX) {
+        lineageData = data;
+        $('#max_lineage_nodes_text').html('Lineage query found <b><font color="red">' + 
+                                          lineage_count + '</font></b> nodes to add. Do you want to visualize them?');
+        $('#max_lineage_nodes_modal').modal('show').css({'left': set_left_margin});
+      }else {
+        addNodesAndLinks(data);
+      }
     },
     error: function(xhr, sts, err) {
       //console.log(xhr);
@@ -794,32 +812,6 @@ function dblclick(d) {
     }
   });
 }
-
-/*
-function get_info_table(id, doc) {
-  var html = "<table class='table table-striped table-bordered prov_es_info_table'>";
-  html += "<tr><td><b>id<b></td><td>" + id + "</td></tr>";
-  var title = null;
-  for (var k in doc) {
-    if (doc.hasOwnProperty(k)) {
-      //console.log(k, doc[k]);
-      if (k === "prov:label") title = doc[k];
-      if (doc[k].constructor === Array) {
-        var val = doc[k].join(", ");
-      }else {
-        if (doc[k] === Object(doc[k]) && k == "prov:type") {
-          var val = doc[k]['$'];
-        }else { 
-          var val = doc[k];
-        }
-      }
-      html += "<tr><td><b>" + k + "</b></td><td>" + val + "</td></tr>";
-    }
-  }
-  html += "</table";
-  return { title: title, html:html };
-}
-*/
 
 
 function get_info_snippet(id, doc) {

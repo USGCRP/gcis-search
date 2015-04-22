@@ -141,15 +141,14 @@
 // APP_URL
 var APP_URL = "{{ url_for('.home') }}";
 
+// max lineage nodex
+var LINEAGE_NODES_MAX = {{ config['LINEAGE_NODES_MAX'] }};
+
 // canvas attributes and height determination function
 var width = null,
     height = null;
 function get_height() { return 500; }
 
-
-function set_left_margin() {
-  return ($(window).width() - $(this).width())/2;
-}
 
 // global backdrop
 var backdrop = null;
