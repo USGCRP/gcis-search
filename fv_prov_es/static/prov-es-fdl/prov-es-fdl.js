@@ -784,6 +784,11 @@ function click(d) {
   //$('#prov_es_info_text').html('<pre>' + json_str + '</pre>');
   $('#prov_es_info_text').html(info.html);
   $('.prov_es_info_modal').linkify();
+  $('#query_lineage_btn').unbind();
+  $('#query_lineage_btn').on('click', function() {
+    $('#prov_es_info_modal').modal('hide');
+    dblclick(d);
+  });
   $('#prov_es_info_modal').modal('show').css({'left': set_left_margin});
 }
 
