@@ -767,13 +767,13 @@ function click(d) {
   //console.log(d);
   var doc = d.doc;
   var title = d.id;
-  var info_table = get_info_table(doc);
-  if (info_table.title !== null) title = info_table.title;
+  var info = get_info_snippet(d.id, doc);
+  if (info.title !== null) title = info.title;
   $('#prov_es_info_modal_label').text(title);
   //var json_str = JSON.stringify(d.doc, null, '  ');
   //$('#prov_es_info_text').html('<pre>' + json_str + '</pre>');
-  $('#prov_es_info_text').html(info_table.html);
-  $('.prov_es_info_table').linkify();
+  $('#prov_es_info_text').html(info.html);
+  $('.prov_es_info_modal').linkify();
   $('#prov_es_info_modal').modal('show').css({'left': set_left_margin});
 }
 
@@ -795,9 +795,10 @@ function dblclick(d) {
   });
 }
 
-
-function get_info_table(doc) {
+/*
+function get_info_table(id, doc) {
   var html = "<table class='table table-striped table-bordered prov_es_info_table'>";
+  html += "<tr><td><b>id<b></td><td>" + id + "</td></tr>";
   var title = null;
   for (var k in doc) {
     if (doc.hasOwnProperty(k)) {
@@ -817,4 +818,78 @@ function get_info_table(doc) {
   }
   html += "</table";
   return { title: title, html:html };
+}
+*/
+
+
+function get_info_snippet(id, doc) {
+  var html = 'id: <a href=\'' + APP_URL + get_search_link(id) + '\'>' + id + '</a><br/>';
+  var title = null;
+  var job_id = null,
+      job_type = null,
+      mozart_url = null;
+  for (var k in doc) {
+    if (doc.hasOwnProperty(k)) {
+      //console.log(k, doc[k]);
+      // use label as title
+      if (k === "prov:label") title = doc[k];
+
+      // get array of values
+      if (doc[k].constructor === Array) {
+        var vals = doc[k];
+      }else {
+        if (doc[k] === Object(doc[k]) && k == "prov:type") {
+          var vals = [doc[k]['$']];
+        }else { 
+          var vals = [doc[k]];
+        }
+      }
+
+      // detect mozart jobs
+      if (k === "hysds:job_id") job_id = doc[k];
+      if (k === "hysds:job_type") job_type = doc[k];
+      if (k === "hysds:mozart_url") mozart_url = doc[k];
+
+      // generate linkified html for values
+      html += k + ': ';
+      var ns_links = [];
+      for (var i = 0; i < vals.length; i++) {
+        var val = vals[i];
+        if (k === "prov:location" || /_url$/.test(k)) {
+          ns_links.push('<a target="_blank" href="' + val + '">' + val + '</a>');
+        }else {
+          ns_links.push('<a href=\'' + APP_URL + get_search_link(val) + '\'>' + val + '</a>');
+        }
+      }
+      html += ns_links.join(", ") + "<br/>";
+    }
+  }
+
+  // add mozart job url if detected
+  if (job_id !== null && job_type !== null && mozart_url !== null) {
+    html += '<a target="_blank" href=\'' + mozart_url + '?source={"query":{"bool":{"must":[{"term":{"job.job.type":"' + job_type + '"}},{"query_string":{"query":"\\"' + job_id + '\\""}}]}}}\'>view job</a><br/>';
+  }
+
+  return { title: title, html:html };
+}
+
+
+function get_search_link(val) {
+  return '?source={"query":{"query_string":{"query":"\\"' + val + '\\""}}}';
+}
+
+
+function show_prov_es_info(div_id, doc) {
+  //console.log(div_id);
+  //console.log(doc);
+  //console.log(doc._id);
+  //console.log(APP_URL);
+  var id = doc['_id'];
+  var type = doc['_type'];
+  var info = get_info_snippet(id, doc['prov_es_json'][type][id]);
+  var ns_div = $(jq(div_id));
+  $(ns_div).next('br').remove();
+  //console.log(info['html']);
+  $(ns_div).html(info['html']);
+  $(ns_div).linkify();
 }
