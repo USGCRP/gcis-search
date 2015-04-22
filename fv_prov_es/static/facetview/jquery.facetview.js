@@ -903,9 +903,13 @@ search box - the end user will not know they are happening.
                 line = "";
                 for ( var object = 0; object < display[lineitem].length; object++ ) {
                     var thekey = display[lineitem][object]['field'];
-                    parts = thekey.split('.');
-                    for ( var i = 0; i < parts.length; i++ ) {
-                        var res = record[parts[i]];
+                    if (thekey === null) {
+                        var res = JSON.stringify(record);
+                    } else {
+                        parts = thekey.split('.');
+                        for ( var i = 0; i < parts.length; i++ ) {
+                            var res = record[parts[i]];
+                        }
                     }
                     if (res && res.constructor.toString().indexOf("Array") == -1) {
                         var thevalue = res;  // if this is a dict
