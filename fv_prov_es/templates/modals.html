@@ -1,0 +1,210 @@
+    <!-- create rule modal -->
+    <div id="rule_modal" class="modal hide fade" tabindex="-1" role="dialog"
+         aria-labelledby="rule_modal_label" aria-hidden="true" data-backdrop="static"
+         data-keyboard="false">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="rule_modal_label">Monitor This</h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body-div">
+          <form id="rule_form" class="form-horizontal">
+            <input type="hidden" id="rule_id"/>
+            <input type="hidden" id="workflow_val"/>
+            <input type="hidden" id="kwargs"/>
+            <div class="control-group">
+              <label class="control-label" for="rule_name">Rule name</label>
+              <div class="controls">
+                <input class="field span4" type="text" id="rule_name" name="rule_name" placeholder="e.g. Email Calimap">
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="query_string">Condition</label>
+              <div class="controls">
+                <textarea class="field span4" type="textarea" rows="5" id="query_string" name="query_string"></textarea>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="workflow">Action</label>
+              <div class="controls">
+                <select class="field span4" name="workflow" id="workflow"></select>
+              </div>
+            </div>
+            <fieldset id="dynamic_fields" />
+          </form>
+        </div>
+        <div>
+          <label id="ajax_error" class="error" style="display: block;"></label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn cancel_rule" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button id="rule_btn" class="btn btn-primary">OK</button>
+      </div>
+    </div>
+
+    <!-- process this modal -->
+    <div id="procthis_modal" class="modal hide fade" tabindex="-1" role="dialog"
+         aria-labelledby="procthis_modal_label" aria-hidden="true" data-backdrop="static"
+         data-keyboard="false">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="procthis_modal_label">Monitor This</h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body-div">
+          <form id="procthis_form" class="form-horizontal">
+            <input type="hidden" id="procthis_workflow_val"/>
+            <input type="hidden" id="procthis_kwargs"/>
+            <div class="control-group">
+              <label class="control-label" for="procthis_name">Rule name</label>
+              <div class="controls">
+                <input class="field span4" type="text" id="procthis_name" name="procthis_name" placeholder="e.g. Email Calimap">
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="query_string">Condition</label>
+              <div class="controls">
+                <textarea class="field span4" type="textarea" rows="5" id="procthis_query_string" name="query_string"></textarea>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="workflow">Action</label>
+              <div class="controls">
+                <select class="field span4" name="workflow" id="procthis_workflow"></select>
+              </div>
+            </div>
+            <fieldset id="procthis_dynamic_fields" />
+          </form>
+        </div>
+        <div>
+          <label id="procthis_ajax_error" class="error" style="display: block;"></label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn cancel_rule" data-dismiss="modal" aria-hidden="true">Cancel</button>
+        <button id="procthis_btn" class="btn btn-primary">Process Now</button>
+      </div>
+    </div>
+
+    <!-- list my rules modal -->
+    <div id="list_rules_modal" class="modal hide fade list_rules_modal" tabindex="-1" role="dialog"
+         aria-labelledby="list_rules_modal_label" aria-hidden="true" data-backdrop="static"
+         data-keyboard="false">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="list_rules_modal_label">My Rules</h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body-div">
+          <table id="rules_table" cellspacing="1" cellpadding="3" class="tablehead" style="background:#CCC;">
+            <caption>
+              These are the rules you have defined.
+            </caption>
+            <thead>
+              <tr class="colhead">
+                <th>Name</th>
+                <th>Condition</th>
+                <th>Action</th>
+                <th>Keyword Args</th>
+                <th class="{sorter: false}">Status</th>
+                <th class="{sorter: false}">Edit</th>
+                <th class="{sorter: false}">Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn close_list_rules" data-dismiss="modal" aria-hidden="true">Close</button>
+      </div>
+    </div>
+
+    <!-- confirm deletion modal -->
+    <div id="confirm_delete_modal" class="modal hide fade" tabindex="-1" role="dialog"
+         aria-labelledby="confirm_delete_modal_label" aria-hidden="true" data-backdrop="static"
+         data-keyboard="false">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="confirm_delete_modal_label">Delete Confirmation</h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body-div">
+          <p>Are you sure you want to delete the rule named "<b id="delete_rule_name"></b>"?</p>
+          <input type="hidden" id="delete_rule_id"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn cancel_confirm_delete" data-dismiss="modal" aria-hidden="true">No</button>
+        <button id="confirm_delete_btn" class="btn btn-primary confirm_delete">Yes</button>
+      </div>
+    </div>
+
+    <!-- error message modal -->
+    <div id="error_modal" class="modal hide fade error_modal" tabindex="-1" role="dialog"
+         aria-labelledby="error_modal_label" aria-hidden="true" data-backdrop="static"
+         data-keyboard="false">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="error_modal_label">Encountered Error</h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body-div"><label id="general_error" class="error" style="display: block;"></label></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
+      </div>
+    </div>
+
+    <!-- prov_es_json modal -->
+    <div id="prov_es_json_modal" class="modal hide fade prov_es_json_modal" tabindex="-1" role="dialog"
+         aria-labelledby="prov_es_json_modal_label" aria-hidden="true" data-backdrop="static"
+         data-keyboard="false">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="prov_es_json_modal_label">PROV-ES JSON</h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body-div"><label id="prov_es_json_text" style="display: block;"></label></div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-success" target="_blank" id="prov_es_json_modal_download" href="">Download</a>
+        <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
+      </div>
+    </div>
+
+    <!-- prov_es_ttl modal -->
+    <div id="prov_es_ttl_modal" class="modal hide fade prov_es_ttl_modal" tabindex="-1" role="dialog"
+         aria-labelledby="prov_es_ttl_modal_label" aria-hidden="true" data-backdrop="static"
+         data-keyboard="false">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="prov_es_ttl_modal_label">PROV-ES Turtle</h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body-div"><label id="prov_es_ttl_text" style="display: block;"></label></div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-success" target="_blank" id="prov_es_ttl_modal_download" href="">Download</a>
+        <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
+      </div>
+    </div>
+
+    <!-- prov_es_info modal -->
+    <div id="prov_es_info_modal" class="modal hide fade prov_es_info_modal" tabindex="-1" role="dialog"
+         aria-labelledby="prov_es_info_modal_label" aria-hidden="true" data-backdrop="static"
+         data-keyboard="false">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="prov_es_info_modal_label">PROV-ES Info</h3>
+      </div>
+      <div class="modal-body">
+        <div class="modal-body-div"><label id="prov_es_info_text" style="display: block;"></label></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
+      </div>
+    </div>

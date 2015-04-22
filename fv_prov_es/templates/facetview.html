@@ -134,6 +134,8 @@
 
   </style>
 
+  {% include "utils.html" %}
+
   <script type="text/javascript">
 
 // APP_URL
@@ -148,68 +150,6 @@ function get_height() { return 500; }
 function set_left_margin() {
   return ($(window).width() - $(this).width())/2;
 }
-
-function show_prov_es_json() {
-  var id = this.id.split("_")[1];
-  $('#prov_es_json_modal_download').attr('disabled', true);
-  $('#prov_es_json_modal_download').attr('href', "{{ url_for('api_v0-1.download_prov_es_json') }}?id=" + id);
-  //console.log(id);
-  $.ajax({
-    url: "{{ url_for('api_v0-1.prov_es_json') }}",
-    data: { id: id },
-    success: function(data, sts, xhr) {
-      //console.log(data);
-      var json_str = JSON.stringify(data['result']['prov_es_json'], null, '  ');
-      $('#prov_es_json_text').html('<pre>' + json_str + '</pre>');
-      $('#prov_es_json_modal').modal('show').css({'left': set_left_margin});
-    },
-    error: function(xhr, sts, err) {
-      //console.log(xhr);
-      $('#general_error').html("Error: " + xhr.responseText);
-      $('#error_modal').modal('show').css({'left': set_left_margin});
-    }
-  });
-}
-
-function show_prov_es_ttl() {
-  var id = this.id.split("_")[1];
-  $('#prov_es_ttl_modal_download').attr('disabled', true);
-  $('#prov_es_ttl_modal_download').attr('href', "{{ url_for('api_v0-1.download_prov_es_ttl') }}?id=" + id);
-  //console.log(id);
-  $.ajax({
-    url: "{{ url_for('api_v0-1.prov_es_ttl') }}",
-    data: { id: id },
-    success: function(data, sts, xhr) {
-      //console.log(data);
-      var ttl = data['result'].replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      $('#prov_es_ttl_text').html('<pre>' + ttl + '</pre>');
-      $('#prov_es_ttl_modal').modal('show').css({'left': set_left_margin});
-    },
-    error: function(xhr, sts, err) {
-      //console.log(xhr);
-      $('#general_error').html("Error: " + xhr.responseText);
-      $('#error_modal').modal('show').css({'left': set_left_margin});
-    }
-  });
-}
-
-
-function get_icon(concept) {
-  if (concept === "entity") {
-    return "<img src='{{ url_for('static', filename='facetview/img/entity.png') }}' class='img-rounded'/>";
-  }else if (concept === "activity") {
-    return "<img src='{{ url_for('static', filename='facetview/img/activity.png') }}' class='img-rounded'/>";
-  }else if (concept === "agent") {
-    return "<img src='{{ url_for('static', filename='facetview/img/agent.png') }}' class='img-rounded'/>";
-  //}else if (concept === "used") {
-  //  return "<img src='{{ url_for('static', filename='facetview/img/used.png') }}' class='img-rounded'/>";
-  //}else if (concept === "wasGeneratedBy") {
-  //  return "<img src='{{ url_for('static', filename='facetview/img/generated.png') }}' class='img-rounded'/>";
-  }else {
-    return "<img src='{{ url_for('static', filename='facetview/img/relation.png') }}' class='img-rounded'/>";
-  }
-}
-
 
 // global backdrop
 var backdrop = null;
@@ -413,44 +353,6 @@ jQuery(document).ready(function($) {
           "post": ";\n" +
                  "  show_prov_es_info('prov_es_info_' + id, doc);\n" +
                  "});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": '<br/><table><tr><td><a class="btn btn-primary" id="provesjson_',
-          "field": "_id",
-          "post": '">JSON</a>'
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  var link = $(jq('provesjson_",
-          "field": "_id",
-          "post": "'));\n" +
-                  "  $(link).on('click', show_prov_es_json);\n" +
-                  "});<\/script></td>"
-        },
-        {
-          "pre": '<td><a class="btn btn-inverse" id="provesttl_',
-          "field": "_id",
-          "post": '">Turtle</a>'
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  var link = $(jq('provesttl_",
-          "field": "_id",
-          "post": "'));\n" +
-                  "  $(link).on('click', show_prov_es_ttl);\n" +
-                  "});<\/script></td>"
-        },
-        {
-          "pre": '<td><a class="btn btn-success" id="fdl_lineage_',
-          "field": "_id",
-          "post": '"'
-        },
-        {
-          "pre": " href=\"{{ url_for('.fdl') }}?id=",
-          "field": "_id",
-          "post": '" target="_blank">Lineage Graph</a></td></tr></table>'
         }
       ]
     ]
@@ -903,16 +805,6 @@ jQuery(document).ready(function($) {
     }
   });
 
-  // handler for prov_es_json_modal
-  $('#prov_es_json_modal').on('show', function() {
-    $('#prov_es_json_modal_download').attr('disabled', false);
-  });
-
-  // handler for prov_es_ttl_modal
-  $('#prov_es_ttl_modal').on('show', function() {
-    $('#prov_es_ttl_modal_download').attr('disabled', false);
-  });
-
   // open up all facets on page load
   $('.facetview_filtershow').each(function(index, value) {
     $(value).click();
@@ -1126,216 +1018,7 @@ jQuery(document).ready(function($) {
     <!--<h4>GRQ facets</h4>-->
     <div class="facet-view-simple"></div>
 
-    <!-- create rule modal -->
-    <div id="rule_modal" class="modal hide fade" tabindex="-1" role="dialog"
-         aria-labelledby="rule_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="rule_modal_label">Monitor This</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div">
-          <form id="rule_form" class="form-horizontal">
-            <input type="hidden" id="rule_id"/>
-            <input type="hidden" id="workflow_val"/>
-            <input type="hidden" id="kwargs"/>
-            <div class="control-group">
-              <label class="control-label" for="rule_name">Rule name</label>
-              <div class="controls">
-                <input class="field span4" type="text" id="rule_name" name="rule_name" placeholder="e.g. Email Calimap">
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="query_string">Condition</label>
-              <div class="controls">
-                <textarea class="field span4" type="textarea" rows="5" id="query_string" name="query_string"></textarea>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="workflow">Action</label>
-              <div class="controls">
-                <select class="field span4" name="workflow" id="workflow"></select>
-              </div>
-            </div>
-            <fieldset id="dynamic_fields" />
-          </form>
-        </div>
-        <div>
-          <label id="ajax_error" class="error" style="display: block;"></label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn cancel_rule" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <button id="rule_btn" class="btn btn-primary">OK</button>
-      </div>
-    </div>
-
-    <!-- process this modal -->
-    <div id="procthis_modal" class="modal hide fade" tabindex="-1" role="dialog"
-         aria-labelledby="procthis_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="procthis_modal_label">Monitor This</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div">
-          <form id="procthis_form" class="form-horizontal">
-            <input type="hidden" id="procthis_workflow_val"/>
-            <input type="hidden" id="procthis_kwargs"/>
-            <div class="control-group">
-              <label class="control-label" for="procthis_name">Rule name</label>
-              <div class="controls">
-                <input class="field span4" type="text" id="procthis_name" name="procthis_name" placeholder="e.g. Email Calimap">
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="query_string">Condition</label>
-              <div class="controls">
-                <textarea class="field span4" type="textarea" rows="5" id="procthis_query_string" name="query_string"></textarea>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="workflow">Action</label>
-              <div class="controls">
-                <select class="field span4" name="workflow" id="procthis_workflow"></select>
-              </div>
-            </div>
-            <fieldset id="procthis_dynamic_fields" />
-          </form>
-        </div>
-        <div>
-          <label id="procthis_ajax_error" class="error" style="display: block;"></label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn cancel_rule" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <button id="procthis_btn" class="btn btn-primary">Process Now</button>
-      </div>
-    </div>
-
-    <!-- list my rules modal -->
-    <div id="list_rules_modal" class="modal hide fade list_rules_modal" tabindex="-1" role="dialog"
-         aria-labelledby="list_rules_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="list_rules_modal_label">My Rules</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div">
-          <table id="rules_table" cellspacing="1" cellpadding="3" class="tablehead" style="background:#CCC;">
-            <caption>
-              These are the rules you have defined.
-            </caption>
-            <thead>
-              <tr class="colhead">
-                <th>Name</th>
-                <th>Condition</th>
-                <th>Action</th>
-                <th>Keyword Args</th>
-                <th class="{sorter: false}">Status</th>
-                <th class="{sorter: false}">Edit</th>
-                <th class="{sorter: false}">Delete</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
-        </div>
-
-      </div>
-      <div class="modal-footer">
-        <button class="btn close_list_rules" data-dismiss="modal" aria-hidden="true">Close</button>
-      </div>
-    </div>
-
-    <!-- confirm deletion modal -->
-    <div id="confirm_delete_modal" class="modal hide fade" tabindex="-1" role="dialog"
-         aria-labelledby="confirm_delete_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="confirm_delete_modal_label">Delete Confirmation</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div">
-          <p>Are you sure you want to delete the rule named "<b id="delete_rule_name"></b>"?</p>
-          <input type="hidden" id="delete_rule_id"/>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn cancel_confirm_delete" data-dismiss="modal" aria-hidden="true">No</button>
-        <button id="confirm_delete_btn" class="btn btn-primary confirm_delete">Yes</button>
-      </div>
-    </div>
-
-    <!-- error message modal -->
-    <div id="error_modal" class="modal hide fade error_modal" tabindex="-1" role="dialog"
-         aria-labelledby="error_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="error_modal_label">Encountered Error</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div"><label id="general_error" class="error" style="display: block;"></label></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
-      </div>
-    </div>
-
-    <!-- prov_es_json modal -->
-    <div id="prov_es_json_modal" class="modal hide fade prov_es_json_modal" tabindex="-1" role="dialog"
-         aria-labelledby="prov_es_json_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="prov_es_json_modal_label">PROV-ES JSON</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div"><label id="prov_es_json_text" style="display: block;"></label></div>
-      </div>
-      <div class="modal-footer">
-        <a class="btn btn-success" target="_blank" id="prov_es_json_modal_download" href="">Download</a>
-        <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
-      </div>
-    </div>
-
-    <!-- prov_es_ttl modal -->
-    <div id="prov_es_ttl_modal" class="modal hide fade prov_es_ttl_modal" tabindex="-1" role="dialog"
-         aria-labelledby="prov_es_ttl_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="prov_es_ttl_modal_label">PROV-ES Turtle</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div"><label id="prov_es_ttl_text" style="display: block;"></label></div>
-      </div>
-      <div class="modal-footer">
-        <a class="btn btn-success" target="_blank" id="prov_es_ttl_modal_download" href="">Download</a>
-        <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
-      </div>
-    </div>
-
-    <!-- prov_es_info modal -->
-    <div id="prov_es_info_modal" class="modal hide fade prov_es_info_modal" tabindex="-1" role="dialog"
-         aria-labelledby="prov_es_info_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="prov_es_info_modal_label">PROV-ES Info</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div"><label id="prov_es_info_text" style="display: block;"></label></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
-      </div>
-    </div>
+    {% include "modals.html" %}
 
   </div>
 

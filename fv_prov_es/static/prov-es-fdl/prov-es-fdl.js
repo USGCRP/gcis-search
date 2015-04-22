@@ -870,6 +870,16 @@ function get_info_snippet(id, doc) {
     html += '<a target="_blank" href=\'' + mozart_url + '?source={"query":{"bool":{"must":[{"term":{"job.job.type":"' + job_type + '"}},{"query_string":{"query":"\\"' + job_id + '\\""}}]}}}\'>view job</a><br/>';
   }
 
+  // add buttons
+  html += '<br/><table><tr>';
+  html += '<td><a class="btn btn-primary" id="provesjson_' + id + '">JSON</a>';
+  html += '<script>$(function() { $(jq("provesjson_' + id + '")).on("click", show_prov_es_json); });<\/script></td>';
+  html += '<td><a class="btn btn-inverse" id="provesttl_' + id + '">Turtle</a>';
+  html += '<script>$(function() { $(jq("provesttl_' + id + '")).on("click", show_prov_es_ttl); });<\/script></td>';
+  html += '<td><a class="btn btn-success" id="fdl_lineage_' + id + '" href="' + APP_URL + 'fdl?id=' + id + '" target="_blank">';
+  html += 'Lineage Graph</a></td>';
+  html += '</tr></table>';
+
   return { title: title, html:html };
 }
 
