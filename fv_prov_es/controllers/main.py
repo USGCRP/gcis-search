@@ -27,6 +27,7 @@ def home():
                            title=current_app.config['TITLE'],
                            badge=current_app.config['BADGE'],
                            description=current_app.config['DESCRIPTION'],
+                           lineage_nodes_max=current_app.config['LINEAGE_NODES_MAX'],
                            current_year=datetime.now().year)
 
 
@@ -79,6 +80,7 @@ def fdl():
     return render_template('fdl.html',
                            title='PROV-ES Lineage Graph',
                            badge=current_app.config['BADGE'],
+                           lineage_nodes_max=current_app.config['LINEAGE_NODES_MAX'],
                            id=id,
                            current_year=datetime.now().year)
 
