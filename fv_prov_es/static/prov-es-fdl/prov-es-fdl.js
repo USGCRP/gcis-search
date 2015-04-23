@@ -198,6 +198,20 @@ function link_association(src_x, src_y, tgt_x, tgt_y) {
 }
 
 
+// create delegation links
+function link_delegation(src_x, src_y, tgt_x, tgt_y) {
+  var dx = tgt_x - src_x + rectLength/2,
+      dy = tgt_y - src_y + rectLength/2,
+      dr = Math.sqrt(dx * dx + dy * dy);
+  if (isNaN(dx) || isNaN(dy) || isNaN(dr)) return null;
+  // specify source and target of paths taking into account offsets to get to node center
+  return "M" + Math.max(rectLength, Math.min(width - rectLength, src_x) + rectLength/2) + "," + 
+         Math.max(rectLength, Math.min(height - rectLength, src_y) + rectLength/2) + "A" + dr + 
+         "," + dr + " 0 0,1 " + (Math.max(rectLength, Math.min(width - rectLength, tgt_x)) +  + rectLength/2) + 
+         "," + (Math.max(rectLength, Math.min(height - rectLength, tgt_y)) + rectLength/2);
+}
+
+
 // create controlled links
 function link_controlled(src_x, src_y, tgt_x, tgt_y) {
   var dx = tgt_x - src_x + polyLength/2,
@@ -264,6 +278,9 @@ function tick() {
       }
       if (d.type == "associated") {
         return link_association(d.source.x, d.source.y, d.target.x, d.target.y);
+      }
+      if (d.type == "delegated") {
+        return link_delegation(d.source.x, d.source.y, d.target.x, d.target.y);
       }
       if (d.type == "controlled") {
         return link_controlled(d.source.x, d.source.y, d.target.x, d.target.y);
@@ -376,6 +393,9 @@ function setGraphVizLocs() {
       if (d.type == "associated") {
         return link_association(d.source.gv_x, d.source.gv_y, d.target.gv_x, d.target.gv_y);
       }
+      if (d.type == "delegated") {
+        return link_delegation(d.source.gv_x, d.source.gv_y, d.target.gv_x, d.target.gv_y);
+      }
       if (d.type == "controlled") {
         return link_controlled(d.source.gv_x, d.source.gv_y, d.target.gv_x, d.target.gv_y);
       }
@@ -453,6 +473,9 @@ function enableForce() {
       }
       if (d.type == "associated") {
         return link_association(d.source.x, d.source.y, d.target.x, d.target.y);
+      }
+      if (d.type == "delegated") {
+        return link_delegation(d.source.x, d.source.y, d.target.x, d.target.y);
       }
       if (d.type == "controlled") {
         return link_controlled(d.source.x, d.source.y, d.target.x, d.target.y);
@@ -598,7 +621,7 @@ function get_text(d) {
       else if (t === undefined) t = 'prov:Agent'
     }
     if (d.type == "e2e_related" || d.type == "a2e_related" || d.type == "associated" 
-        || d.type == "used" || d.type == "wasGeneratedBy" ) var label = "";
+        || d.type == "delegated" || d.type == "used" || d.type == "wasGeneratedBy" ) var label = "";
     else {
       var label = d.doc['prov:label'] !== undefined ? d.doc['prov:label'] :
                   d.doc['dcterms:title'] !== undefined ? d.doc['dcterms:title'] : d.id;

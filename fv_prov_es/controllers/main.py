@@ -163,6 +163,7 @@ def parse_d3(pej):
     input_ents = []
     output_ents = []
     associations = []
+    delegations = []
     e2e_relations = []
     a2e_relations = []
     viz_dict = {'nodes': [], 'links': []}
@@ -313,6 +314,46 @@ def parse_d3(pej):
             'doc': waw,
         })
 
+    # add delegation links
+    for d in pej.get('actedOnBehalfOf', {}):
+        dlg = pej['actedOnBehalfOf'][d]
+
+        # get activity
+        a = dlg['prov:activity']
+        if a in pej.get('activity', {}):
+            act = pej['activity'][a]
+        else:
+            act = get_prov_es_json(a)['_source']['prov_es_json']['activity'][a]
+        viz_dict['nodes'].append(get_activity_node(a, act))
+        nodes.append(a)
+        expand_activity_prov(a, act, pem, pej, nodes, viz_dict, associations, a2e_relations)
+        
+        # get delegate agent
+        dlg_ag = dlg['prov:delegate']
+        if dlg_ag in pej.get('agent', {}):
+            dlg_agent = pej['agent'][dlg_ag]
+        else:
+            dlg_agent = get_prov_es_json(dlg_ag)['_source']['prov_es_json']['agent'][dlg_ag]
+        viz_dict['nodes'].append(get_agent_node(dlg_ag, dlg_agent))
+        nodes.append(dlg_ag)
+        #expand_agent_prov(ag, agent, pem, pej, nodes, viz_dict, associations)
+
+        # get responsible agent
+        rsp_ag = dlg['prov:responsible']
+        if rsp_ag in pej.get('agent', {}):
+            rsp_agent = pej['agent'][rsp_ag]
+        else:
+            rsp_agent = get_prov_es_json(rsp_ag)['_source']['prov_es_json']['agent'][rsp_ag]
+        viz_dict['nodes'].append(get_agent_node(rsp_ag, rsp_agent))
+        nodes.append(rsp_ag)
+        #expand_agent_prov(ag, agent, pem, pej, nodes, viz_dict, associations)
+
+        delegations.append({
+            'source': dlg_ag,
+            'target': rsp_ag,
+            'doc': dlg,
+        })
+
     # modify color of entities that are inputs and outputs or just outputs
     new_nodes = []
     for n in viz_dict['nodes']:
@@ -339,6 +380,21 @@ def parse_d3(pej):
             'doc': a.get('doc', None),
         })
         asc_dict[asc] = True
+
+    # add delegation links
+    dlg_dict = {}
+    for d in delegations:
+        dlg = "%s_%s" % (d['source'], d['target'])
+        if dlg in dlg_dict: continue
+        viz_dict['links'].append({
+            'source': nodes.index(d['source']),
+            'target': nodes.index(d['target']),
+            'type': 'delegated',
+            'concept': 'prov:actedOnBehalfOf',
+            'value': 1,
+            'doc': d.get('doc', None),
+        })
+        dlg_dict[dlg] = True
 
     # add e2e_relations links
     e2e_rel_dict = {}

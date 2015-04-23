@@ -35,6 +35,18 @@ path.link.associated {
   stroke-opacity: .3;
 }
 
+marker#delegated {
+  fill: purple;
+  opacity: .5;
+}
+
+path.link.delegated {
+  stroke: purple;
+  stroke-width: 2;
+  stroke-dasharray: 8 3 2;
+  stroke-opacity: .3;
+}
+
 marker#controlled {
   fill: lime;
 }

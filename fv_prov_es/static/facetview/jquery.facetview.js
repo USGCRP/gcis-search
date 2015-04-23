@@ -1069,6 +1069,18 @@ search box - the end user will not know they are happening.
               .append("path")
                 .attr("d", "M0,-5L10,0L0,5");
                 
+            // customize marker for delegated paths
+            defs.append("marker")
+                .attr("id", "delegated")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", rectLength - 5)
+                .attr("refY", 0) //-1)
+                .attr("markerWidth", markerLength)
+                .attr("markerHeight", markerLength)
+                .attr("orient", "auto")
+              .append("path")
+                .attr("d", "M0,-5L10,0L0,5");
+      
             // customize marker for controlled paths
             defs.append("marker")
                 .attr("id", "controlled")
