@@ -923,3 +923,122 @@ function show_prov_es_info(div_id, doc) {
   $(ns_div).html(info['html']);
   $(ns_div).linkify();
 }
+
+
+function initialize_fdl() {
+  tip = d3.tip()
+      .attr('class', 'd3-tip')
+      .offset([100, 0])
+      .direction('e')
+      .html(function(d) {
+        if (d.doc === undefined || d.doc === null)
+          return '<strong>(' + d.concept + ')</strong><br/><pre style="color:#0088CC;font-size:10px;">No JSON to show.</pre>';
+        var json_str = JSON.stringify(d.doc, null, '  ');
+        var title = get_text(d);
+        return '<strong>' + title + '</strong><br/><pre style="color:#0088CC;font-size:10px;">' + json_str + '</pre>';
+      });
+  
+  force = d3.layout.force()
+      .nodes(nodes)
+      .links(links)
+      .linkDistance(150)
+      .charge(-500)
+      .on("tick", tick);
+  
+  svg = d3.select("#chart").append("svg");
+
+  svg.call(tip);
+  
+  // Per-type markers, as they don't inherit styles.
+  defs = svg.append("defs");
+  
+  // customize marker for used paths
+  defs.append("marker")
+      .attr("id", "used")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", rectLength - 1)
+      .attr("refY", 0) //-1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+  
+  // customize marker for wasGenerated paths
+  defs.append("marker")
+      .attr("id", "wasGeneratedBy")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", radiusLength + markerLength)
+      .attr("refY", 0) //-1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+  
+  // customize marker for associated paths
+  defs.append("marker")
+      .attr("id", "associated")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", radiusLength + markerLength)
+      .attr("refY", -1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+      
+  // customize marker for delegated paths
+  defs.append("marker")
+      .attr("id", "delegated")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", rectLength - 5)
+      .attr("refY", 0) //-1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+      
+  // customize marker for controlled paths
+  defs.append("marker")
+      .attr("id", "controlled")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", radiusLength + markerLength)
+      .attr("refY", -2.5)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+      
+  // customize marker for entity to entity related paths
+  defs.append("marker")
+      .attr("id", "e2e_related")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", rectLength - 1)
+      .attr("refY", 0) //-1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+      
+  // customize marker for activity to entity related paths
+  defs.append("marker")
+      .attr("id", "a2e_related")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", rectLength - 1)
+      .attr("refY", 0) //-1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+      
+  // add def for info node
+  defs.append("rect")
+      .attr("id", "info")
+      .attr("width", rectLength)
+      .attr("height", rectLength);
+}
