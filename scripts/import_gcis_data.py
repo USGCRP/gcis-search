@@ -90,15 +90,15 @@ def get_image_prov(j, gcis_url):
         doc.hadMember(figure_id, img_id)
 
     # create agents or organizations
-    agent_ids = []
+    agent_ids = {}
+    org_ids = {}
     for cont in j.get('contributors', []):
         # replace slashes because we get prov.model.ProvExceptionInvalidQualifiedName errors
         agent_id = "gcis:%s" % cont['uri'][1:].replace('/', '-')
 
-        # organization
-        if len(cont['organization']) > 0:
-            doc.governingOrganization(agent_id, cont['organization']['name'])
-        else:
+        # create person
+        if len(cont['person']) > 0:
+            # agent 
             agent_name  = " ".join([cont['person'][i] for i in
                                    ('first_name', 'middle_name', 'last_name')
                                    if cont['person'].get(i, None) is not None])
@@ -107,7 +107,16 @@ def get_image_prov(j, gcis_url):
                 ( "prov:label", agent_name ),
                 ( "prov:location", "%s%s" % (gcis_url, cont['uri']) ),
             ])
-        agent_ids.append(agent_id)
+            agent_ids[agent_id] = []
+
+        # organization
+        if len(cont['organization']) > 0:
+            org = cont['organization']
+            org_id = "gcis:%s" % cont['organization']['identifier']
+            if org_id not in org_ids:          
+                doc.governingOrganization(org_id, cont['organization']['name'])
+                org_ids[org_id] = True
+            if agent_id in agent_ids: agent_ids[agent_id].append(org_id)
 
     # create activity
     start_time = j['create_dt']
@@ -126,8 +135,15 @@ def get_image_prov(j, gcis_url):
         else:
             act_id = "gcis:%s" % parent['activity_uri'][1:].replace('/', '-')
         attrs = []
-        if len(agent_ids) > 0:
-            attrs.append(( "prov:wasAssociatedWith", agent_ids[0] ))
+        for agent_id in agent_ids:
+            waw_id = "gcis:%s" % get_uuid("%s:%s" % (act_id, agent_id))
+            doc.wasAssociatedWith(act_id, agent_id, None, waw_id, {'prov:role': 'gcis:contributor'})
+            for org_id in agent_ids[agent_id]:
+                del_id = "gcis:%s" % get_uuid("%s:%s:%s" % (agent_id, org_id, act_id))
+                doc.delegation(agent_id, org_id, act_id, del_id, {'prov:type': 'gcis:worksAt'})
+        for org_id in org_ids:
+            waw_id = "gcis:%s" % get_uuid("%s:%s" % (act_id, org_id))
+            doc.wasAssociatedWith(act_id, org_id, None, waw_id, {'prov:role': 'gcis:funder'})
         act = doc.activity(act_id, start_time, end_time, attrs)
         doc.used(act, input_id, start_time, "gcis:%s" % get_uuid("%s:%s" % (act_id, input_id)))
         doc.wasGeneratedBy(img_id, act, end_time, "gcis:%s" % get_uuid("%s:%s" % (img_id, act_id)))
