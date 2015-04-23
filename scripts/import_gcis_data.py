@@ -41,6 +41,7 @@ def get_image_prov(j, gcis_url):
     doc.entity(img_id, img_attrs)
     reports = []
     chapters = []
+    findings = []
     figures = []
     for figure in j.get('figures', []):
         report_uri = "/report/%s" % figure['report_identifier']
@@ -73,6 +74,21 @@ def get_image_prov(j, gcis_url):
             ])
             chapters.append(chapter_id)
         doc.hadMember(report_id, chapter_id)
+         
+        # create findings
+        r = requests.get('%s%s%s/finding.json' % (gcis_url, report_uri, chapter_uri))
+        r.raise_for_status()
+        for f in r.json():
+            finding_id = "gcis:%s" % f['identifier']
+            if finding_id not in findings:
+                doc.entity(finding_id, [
+                    ( "prov:type", 'gcis:Finding' ),
+                    ( "prov:label", f['identifier'] ),
+                    ( "prov:location", f['href'] ),
+                ])
+                findings.append(finding_id)
+            doc.hadMember(report_id, finding_id)
+            doc.hadMember(chapter_id, finding_id)
          
         # create figure
         r = requests.get('%s%s%s%s.json' % (gcis_url, report_uri, chapter_uri, figure_uri))
