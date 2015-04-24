@@ -1,4 +1,4 @@
-import os, sys, json, requests
+import os, sys, json, requests, traceback
 from datetime import datetime
 
 from flask import Blueprint, request, redirect, url_for, Response, current_app
@@ -309,6 +309,8 @@ class ImportProvEs(Resource):
         conn = get_es_conn(es_url, es_index, alias)
         try: import_prov(conn, es_index, alias, pej)
         except Exception, e:
+            current_app.logger.debug("Got error: %s" % e)
+            current_app.logger.debug("Traceback: %s" % traceback.format_exc())
             message = "Failed to import PROV-ES json. Check that your PROV-ES JSON conforms to PROV-JSON."
             current_app.logger.debug(message)
             return { 'success': False,
