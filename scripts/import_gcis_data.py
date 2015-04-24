@@ -6,7 +6,8 @@ import requests_cache
 from fv_prov_es import create_app
 from fv_prov_es.lib.import_utils import get_es_conn, import_prov
 
-from prov_es.model import get_uuid, ProvEsDocument
+from prov_es.model import (get_uuid, ProvEsDocument, GCIS, PROV, PROV_TYPE,
+                           PROV_ROLE, PROV_LABEL, PROV_LOCATION, HYSDS)
 
 
 requests_cache.install_cache('gcis-import')
@@ -16,12 +17,11 @@ def get_image_prov(j, gcis_url):
     """Generate PROV-ES JSON from GCIS image metadata."""
 
     # create doc
-    gcis_ns = "http://data.globalchange.gov/gcis.owl#"
-    doc = ProvEsDocument(namespaces={ "gcis": gcis_ns })
+    doc = ProvEsDocument()
     bndl = None
 
     # create image, figure, chapter and report entities
-    img_id = "gcis:%s" % j['uri'][1:].replace('/', '-')
+    img_id = GCIS["%s" % j['uri'][1:].replace('/', '-')]
     img_title = j['title']
     img_url = None
     img_thumbnail_url = None
@@ -29,15 +29,15 @@ def get_image_prov(j, gcis_url):
         img_url = file_md['href']
         img_thumbnail_url = file_md['thumbnail_href']
     img_attrs = [
-        ( "prov:type", 'gcis:Image' ),
-        ( "prov:label", img_title ),
+        ( PROV_TYPE, GCIS['Image'] ),
+        ( PROV_LABEL, img_title ),
     ]
     if img_url is None:
-        img_attrs.append(( "prov:location", "%s%s" % (gcis_url, j['uri']) ))
+        img_attrs.append(( PROV_LOCATION, "%s%s" % (gcis_url, j['uri']) ))
     else:
-        img_attrs.append(( "prov:location", img_url ))
+        img_attrs.append(( PROV_LOCATION, img_url ))
     if img_thumbnail_url is None:
-        img_attrs.append(( "hysds:thumbnail", img_thumbnail_url ))
+        img_attrs.append(( HYSDS['thumbnail'], img_thumbnail_url ))
     doc.entity(img_id, img_attrs)
     reports = []
     chapters = []
@@ -52,12 +52,12 @@ def get_image_prov(j, gcis_url):
         r = requests.get('%s%s.json' % (gcis_url, report_uri))
         r.raise_for_status()
         report = r.json()
-        report_id = "gcis:%s" % report_uri[1:].replace('/', '-')
+        report_id = GCIS["%s" % report_uri[1:].replace('/', '-')]
         if report_id not in reports:
             doc.entity(report_id, [
-                ( "prov:type", 'gcis:Report' ),
-                ( "prov:label", report['title'] ),
-                ( "prov:location", report['url'] ),
+                ( PROV_TYPE, GCIS['Report'] ),
+                ( PROV_LABEL, report['title'] ),
+                ( PROV_LOCATION, report['url'] ),
             ])
             reports.append(report_id)
 
@@ -65,12 +65,12 @@ def get_image_prov(j, gcis_url):
         r = requests.get('%s%s%s.json' % (gcis_url, report_uri, chapter_uri))
         r.raise_for_status()
         chapter = r.json()
-        chapter_id = "gcis:%s" % chapter_uri[1:].replace('/', '-')
+        chapter_id = GCIS["%s" % chapter_uri[1:].replace('/', '-')]
         if chapter_id not in chapters:
             doc.entity(chapter_id, [
-                ( "prov:type", 'gcis:Chapter' ),
-                ( "prov:label", chapter['title'] ),
-                ( "prov:location", chapter['url'] ),
+                ( PROV_TYPE, GCIS['Chapter'] ),
+                ( PROV_LABEL, chapter['title'] ),
+                ( PROV_LOCATION, chapter['url'] ),
             ])
             chapters.append(chapter_id)
         doc.hadMember(report_id, chapter_id)
@@ -79,12 +79,12 @@ def get_image_prov(j, gcis_url):
         r = requests.get('%s%s%s/finding.json' % (gcis_url, report_uri, chapter_uri))
         r.raise_for_status()
         for f in r.json():
-            finding_id = "gcis:%s" % f['identifier']
+            finding_id = GCIS["%s" % f['identifier']]
             if finding_id not in findings:
                 doc.entity(finding_id, [
-                    ( "prov:type", 'gcis:Finding' ),
-                    ( "prov:label", f['identifier'] ),
-                    ( "prov:location", f['href'] ),
+                    ( PROV_TYPE, GCIS['Finding'] ),
+                    ( PROV_LABEL, f['identifier'] ),
+                    ( PROV_LOCATION, f['href'] ),
                 ])
                 findings.append(finding_id)
             doc.hadMember(report_id, finding_id)
@@ -94,12 +94,12 @@ def get_image_prov(j, gcis_url):
         r = requests.get('%s%s%s%s.json' % (gcis_url, report_uri, chapter_uri, figure_uri))
         r.raise_for_status()
         figure_md = r.json()
-        figure_id = "gcis:%s" % figure_uri[1:].replace('/', '-')
+        figure_id = GCIS["%s" % figure_uri[1:].replace('/', '-')]
         if figure_id not in figures:
             doc.entity(figure_id, [
-                ( "prov:type", 'gcis:Figure' ),
-                ( "prov:label", figure_md['title'] ),
-                ( "prov:location", "%s%s" % (gcis_url, figure_md['uri']) ),
+                ( PROV_TYPE, GCIS['Figure'] ),
+                ( PROV_LABEL, figure_md['title'] ),
+                ( PROV_LOCATION, "%s%s" % (gcis_url, figure_md['uri']) ),
             ])
             figures.append(figure_id)
             doc.hadMember(chapter_id, figure_id)
@@ -110,7 +110,7 @@ def get_image_prov(j, gcis_url):
     org_ids = {}
     for cont in j.get('contributors', []):
         # replace slashes because we get prov.model.ProvExceptionInvalidQualifiedName errors
-        agent_id = "gcis:%s" % cont['uri'][1:].replace('/', '-')
+        agent_id = GCIS["%s" % cont['uri'][1:].replace('/', '-')]
 
         # create person
         if len(cont['person']) > 0:
@@ -119,16 +119,16 @@ def get_image_prov(j, gcis_url):
                                    ('first_name', 'middle_name', 'last_name')
                                    if cont['person'].get(i, None) is not None])
             doc.agent(agent_id, [
-                ( "prov:type", "gcis:Person" ),
-                ( "prov:label", agent_name ),
-                ( "prov:location", "%s%s" % (gcis_url, cont['uri']) ),
+                ( PROV_TYPE, GCIS["Person"] ),
+                ( PROV_LABEL, agent_name ),
+                ( PROV_LOCATION, "%s%s" % (gcis_url, cont['uri']) ),
             ])
             agent_ids[agent_id] = []
 
         # organization
         if len(cont['organization']) > 0:
             org = cont['organization']
-            org_id = "gcis:%s" % cont['organization']['identifier']
+            org_id = GCIS["%s" % cont['organization']['identifier']]
             if org_id not in org_ids:          
                 doc.governingOrganization(org_id, cont['organization']['name'])
                 org_ids[org_id] = True
@@ -138,31 +138,31 @@ def get_image_prov(j, gcis_url):
     start_time = j['create_dt']
     end_time = j['create_dt']
     for parent in j.get('parents', []):
-        input_id = "gcis:%s" % parent['url'][1:].replace('/', '-')
+        input_id = GCIS["%s" % parent['url'][1:].replace('/', '-')]
         input_name = parent['label']
         doc.entity(input_id, [
-            ( "prov:type", "gcis:Dataset" ),
-            ( "prov:label", input_name ),
-            ( "prov:location", "%s%s" % (gcis_url, parent['url']) ),
+            ( PROV_TYPE, GCIS["Dataset"] ),
+            ( PROV_LABEL, input_name ),
+            ( PROV_LOCATION, "%s%s" % (gcis_url, parent['url']) ),
         ])
         # some activity uri's are null
         if parent['activity_uri'] is None:
-            act_id = "gcis:derive-from-%s" % input_id
+            act_id = GCIS["derive-from-%s" % input_id]
         else:
-            act_id = "gcis:%s" % parent['activity_uri'][1:].replace('/', '-')
+            act_id = GCIS["%s" % parent['activity_uri'][1:].replace('/', '-')]
         attrs = []
         for agent_id in agent_ids:
-            waw_id = "gcis:%s" % get_uuid("%s:%s" % (act_id, agent_id))
-            doc.wasAssociatedWith(act_id, agent_id, None, waw_id, {'prov:role': 'gcis:Contributor'})
+            waw_id = GCIS["%s" % get_uuid("%s:%s" % (act_id, agent_id))]
+            doc.wasAssociatedWith(act_id, agent_id, None, waw_id, {'prov:role': GCIS['Contributor']})
             for org_id in agent_ids[agent_id]:
-                del_id = "gcis:%s" % get_uuid("%s:%s:%s" % (agent_id, org_id, act_id))
-                doc.delegation(agent_id, org_id, act_id, del_id, {'prov:type': 'gcis:worksAt'})
+                del_id = GCIS["%s" % get_uuid("%s:%s:%s" % (agent_id, org_id, act_id))]
+                doc.delegation(agent_id, org_id, act_id, del_id, {'prov:type': GCIS['worksAt']})
         for org_id in org_ids:
-            waw_id = "gcis:%s" % get_uuid("%s:%s" % (act_id, org_id))
-            doc.wasAssociatedWith(act_id, org_id, None, waw_id, {'prov:role': 'gcis:Funder'})
+            waw_id = GCIS["%s" % get_uuid("%s:%s" % (act_id, org_id))]
+            doc.wasAssociatedWith(act_id, org_id, None, waw_id, {'prov:role': GCIS['Funder']})
         act = doc.activity(act_id, start_time, end_time, attrs)
-        doc.used(act, input_id, start_time, "gcis:%s" % get_uuid("%s:%s" % (act_id, input_id)))
-        doc.wasGeneratedBy(img_id, act, end_time, "gcis:%s" % get_uuid("%s:%s" % (img_id, act_id)))
+        doc.used(act, input_id, start_time, GCIS["%s" % get_uuid("%s:%s" % (act_id, input_id))])
+        doc.wasGeneratedBy(img_id, act, end_time, GCIS["%s" % get_uuid("%s:%s" % (img_id, act_id))])
            
     # serialize
     prov_json = json.loads(doc.serialize())
@@ -173,11 +173,11 @@ def get_image_prov(j, gcis_url):
         col = hm['prov:collection'] 
         ent = hm['prov:entity'] 
         if col in reports and ent in chapters:
-            hm['prov:type'] = 'gcis:hasChapter'
+            hm['prov:type'] = GCIS['hasChapter']
         elif col in chapters and ent in figures:
-            hm['prov:type'] = 'gcis:hasFigure'
+            hm['prov:type'] = GCIS['hasFigure']
         elif col in figures and ent == img_id:
-            hm['prov:type'] = 'gcis:hasImage'
+            hm['prov:type'] = GCIS['hasImage']
 
     #print(json.dumps(prov_json, indent=2))
 
