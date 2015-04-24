@@ -285,7 +285,7 @@ class ImportProvEs(Resource):
     @api.marshal_with(resp_model)
     def post(self):
         # get PROV-ES json
-        prov_es = request.args.get('prov_es', None)
+        prov_es = request.form.get('prov_es', request.args.get('prov_es', None))
         if prov_es is None:
             return { 'success': False,
                      'message': "Missing prov_es parameter.",
