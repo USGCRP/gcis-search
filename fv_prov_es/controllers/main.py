@@ -27,6 +27,7 @@ def home():
                            title=current_app.config['TITLE'],
                            badge=current_app.config['BADGE'],
                            description=current_app.config['DESCRIPTION'],
+                           lineage_nodes_max=current_app.config['LINEAGE_NODES_MAX'],
                            current_year=datetime.now().year)
 
 
@@ -79,6 +80,7 @@ def fdl():
     return render_template('fdl.html',
                            title='PROV-ES Lineage Graph',
                            badge=current_app.config['BADGE'],
+                           lineage_nodes_max=current_app.config['LINEAGE_NODES_MAX'],
                            id=id,
                            current_year=datetime.now().year)
 
@@ -90,7 +92,8 @@ def expand_activity_prov(a, act, pem, pej, nodes, viz_dict, associations, a2e_re
         obj_type = pem['activity'][pred]['type']
         obj_is_source = pem['activity'][pred]['source']
         if pred in act:
-            for obj_id in act[pred].split(','):
+            obj_ids = act[pred] if isinstance(act[pred], (types.ListType, types.TupleType)) else [act[pred]]
+            for obj_id in obj_ids:
                 if obj_id in pej.get(obj_type, {}):
                     obj_doc = pej[obj_type][obj_id]
                 else:
@@ -122,7 +125,8 @@ def expand_entity_prov(e, ent, pem, pej, nodes, viz_dict, e2e_relations):
         obj_type = pem['entity'][pred]['type']
         obj_is_source = pem['entity'][pred]['source']
         if pred in ent:
-            for obj_id in ent[pred].split(','):
+            obj_ids = ent[pred] if isinstance(ent[pred], (types.ListType, types.TupleType)) else [ent[pred]]
+            for obj_id in obj_ids:
                 if obj_id in pej.get(obj_type, {}):
                     obj_doc = pej[obj_type][obj_id]
                 else:
@@ -159,6 +163,7 @@ def parse_d3(pej):
     input_ents = []
     output_ents = []
     associations = []
+    delegations = []
     e2e_relations = []
     a2e_relations = []
     viz_dict = {'nodes': [], 'links': []}
@@ -278,6 +283,76 @@ def parse_d3(pej):
             'concept': hm.get('prov:type', 'prov:hadMember'),
             'doc': hm,
         })
+        
+    # add association links
+    for w in pej.get('wasAssociatedWith', {}):
+        waw = pej['wasAssociatedWith'][w]
+
+        # get activity
+        a = waw['prov:activity']
+        if a in pej.get('activity', {}):
+            act = pej['activity'][a]
+        else:
+            act = get_prov_es_json(a)['_source']['prov_es_json']['activity'][a]
+        viz_dict['nodes'].append(get_activity_node(a, act))
+        nodes.append(a)
+        expand_activity_prov(a, act, pem, pej, nodes, viz_dict, associations, a2e_relations)
+        
+        # get agent
+        ag = waw['prov:agent']
+        if ag in pej.get('agent', {}):
+            agent = pej['agent'][ag]
+        else:
+            agent = get_prov_es_json(ag)['_source']['prov_es_json']['agent'][ag]
+        viz_dict['nodes'].append(get_agent_node(ag, agent))
+        nodes.append(ag)
+        #expand_agent_prov(ag, agent, pem, pej, nodes, viz_dict, associations)
+
+        associations.append({
+            'source': ag,
+            'target': a,
+            'doc': waw,
+        })
+
+    # add delegation links
+    for d in pej.get('actedOnBehalfOf', {}):
+        dlg = pej['actedOnBehalfOf'][d]
+
+        # get activity
+        a = dlg['prov:activity']
+        if a in pej.get('activity', {}):
+            act = pej['activity'][a]
+        else:
+            act = get_prov_es_json(a)['_source']['prov_es_json']['activity'][a]
+        viz_dict['nodes'].append(get_activity_node(a, act))
+        nodes.append(a)
+        expand_activity_prov(a, act, pem, pej, nodes, viz_dict, associations, a2e_relations)
+        
+        # get delegate agent
+        dlg_ag = dlg['prov:delegate']
+        if dlg_ag in pej.get('agent', {}):
+            dlg_agent = pej['agent'][dlg_ag]
+        else:
+            dlg_agent = get_prov_es_json(dlg_ag)['_source']['prov_es_json']['agent'][dlg_ag]
+        viz_dict['nodes'].append(get_agent_node(dlg_ag, dlg_agent))
+        nodes.append(dlg_ag)
+        #expand_agent_prov(ag, agent, pem, pej, nodes, viz_dict, associations)
+
+        # get responsible agent
+        rsp_ag = dlg['prov:responsible']
+        if rsp_ag in pej.get('agent', {}):
+            rsp_agent = pej['agent'][rsp_ag]
+        else:
+            rsp_agent = get_prov_es_json(rsp_ag)['_source']['prov_es_json']['agent'][rsp_ag]
+        viz_dict['nodes'].append(get_agent_node(rsp_ag, rsp_agent))
+        nodes.append(rsp_ag)
+        #expand_agent_prov(ag, agent, pem, pej, nodes, viz_dict, associations)
+
+        delegations.append({
+            'source': dlg_ag,
+            'target': rsp_ag,
+            'doc': dlg,
+        })
 
     # modify color of entities that are inputs and outputs or just outputs
     new_nodes = []
@@ -305,6 +380,21 @@ def parse_d3(pej):
             'doc': a.get('doc', None),
         })
         asc_dict[asc] = True
+
+    # add delegation links
+    dlg_dict = {}
+    for d in delegations:
+        dlg = "%s_%s" % (d['source'], d['target'])
+        if dlg in dlg_dict: continue
+        viz_dict['links'].append({
+            'source': nodes.index(d['source']),
+            'target': nodes.index(d['target']),
+            'type': 'delegated',
+            'concept': 'prov:actedOnBehalfOf',
+            'value': 1,
+            'doc': d.get('doc', None),
+        })
+        dlg_dict[dlg] = True
 
     # add e2e_relations links
     e2e_rel_dict = {}

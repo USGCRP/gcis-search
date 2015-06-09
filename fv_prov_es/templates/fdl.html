@@ -9,6 +9,15 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='prov-es-fdl/prov-es-fdl.css') }}">
 
 <style>
+html,
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #eee;
+  padding-top: 20px;
+  padding-bottom: 60px;
+}
+
 .modal {
   width: 90%;
   max-width: 1024px;
@@ -55,117 +64,41 @@
 <script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/jquery/1.7.2/jquery-1.7.2.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/jquery-ui-1.8.18.custom/jquery-ui-1.8.18.custom.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/bootstrap-2.3.2/js/bootstrap.min.js') }}"></script>  
+<script type="text/javascript" src="{{ url_for('static', filename='facetview/vendor/linkify/1.1/jquery.linkify.min.js') }}"></script>  
 <script src="{{ url_for('static', filename='JSON-js/json2.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='d3-3.5.5/d3.min.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='d3-tip-0.6.3/d3.tip.v0.6.3.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='prov-es-fdl/prov-es-fdl.js') }}"></script>
+
+{% include "utils.html" %}
+
 <script>
 
-jQuery(document).ready(function($) {
-  tip = d3.tip()
-      .attr('class', 'd3-tip')
-      .offset([100, 0])
-      .direction('e')
-      .html(function(d) {
-        if (d.doc === undefined || d.doc === null)
-          return '<strong>(' + d.concept + ')</strong><br/><pre style="color:#0088CC;font-size:10px;">No JSON to show.</pre>';
-        var json_str = JSON.stringify(d.doc, null, '  ');
-        var title = get_text(d);
-        return '<strong>' + title + '</strong><br/><pre style="color:#0088CC;font-size:10px;">' + json_str + '</pre>';
-      });
-  
-  force = d3.layout.force()
-      .nodes(nodes)
-      .links(links)
-      .linkDistance(150)
-      .charge(-500)
-      .on("tick", tick);
-  
-  svg = d3.select("#chart").append("svg");
+// APP_URL
+var APP_URL = "{{ url_for('.home') }}";
 
-  svg.call(tip);
-  
-  // Per-type markers, as they don't inherit styles.
-  defs = svg.append("defs");
-  
-  // customize marker for used paths
-  defs.append("marker")
-      .attr("id", "used")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", rectLength - 1)
-      .attr("refY", 0) //-1)
-      .attr("markerWidth", markerLength)
-      .attr("markerHeight", markerLength)
-      .attr("orient", "auto")
-    .append("path")
-      .attr("d", "M0,-5L10,0L0,5");
-  
-  // customize marker for wasGenerated paths
-  defs.append("marker")
-      .attr("id", "wasGeneratedBy")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", radiusLength + markerLength)
-      .attr("refY", 0) //-1)
-      .attr("markerWidth", markerLength)
-      .attr("markerHeight", markerLength)
-      .attr("orient", "auto")
-    .append("path")
-      .attr("d", "M0,-5L10,0L0,5");
-  
-  // customize marker for associated paths
-  defs.append("marker")
-      .attr("id", "associated")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", radiusLength + markerLength)
-      .attr("refY", -1)
-      .attr("markerWidth", markerLength)
-      .attr("markerHeight", markerLength)
-      .attr("orient", "auto")
-    .append("path")
-      .attr("d", "M0,-5L10,0L0,5");
-      
-  // customize marker for controlled paths
-  defs.append("marker")
-      .attr("id", "controlled")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", radiusLength + markerLength)
-      .attr("refY", -2.5)
-      .attr("markerWidth", markerLength)
-      .attr("markerHeight", markerLength)
-      .attr("orient", "auto")
-    .append("path")
-      .attr("d", "M0,-5L10,0L0,5");
-      
-  // customize marker for entity to entity related paths
-  defs.append("marker")
-      .attr("id", "e2e_related")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", rectLength - 1)
-      .attr("refY", 0) //-1)
-      .attr("markerWidth", markerLength)
-      .attr("markerHeight", markerLength)
-      .attr("orient", "auto")
-    .append("path")
-      .attr("d", "M0,-5L10,0L0,5");
-      
-  // customize marker for activity to entity related paths
-  defs.append("marker")
-      .attr("id", "a2e_related")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", rectLength - 1)
-      .attr("refY", 0) //-1)
-      .attr("markerWidth", markerLength)
-      .attr("markerHeight", markerLength)
-      .attr("orient", "auto")
-    .append("path")
-      .attr("d", "M0,-5L10,0L0,5");
-      
-  // add def for info node
-  defs.append("rect")
-      .attr("id", "info")
-      .attr("width", rectLength)
-      .attr("height", rectLength);
-  
+// max lineage nodex
+var LINEAGE_NODES_MAX = {{ lineage_nodes_max }};
+
+// canvas attributes and height determination function
+var width = null,
+    height = null;
+function get_height() {
+ return window.innerHeight -
+        parseInt($('body').css('padding-top').replace("px", "")) +
+        parseInt($('body').css('padding-bottom').replace("px", ""));
+}
+
+
+jQuery(document).ready(function($) {
+
+  // set canvas attributes
+  width = $('#chart').innerWidth();
+  height = get_height();
+
+  // initialize FDL
+  initialize_fdl();
+
   // add initial session viz
   addViz("{{ id }}", "{{ url_for('.fdl_data') }}");
 
@@ -331,22 +264,7 @@ jQuery(document).ready(function($) {
 });
 </script>
 
-<!-- dblclick modal -->
-<div id="dblclick_modal" class="modal hide fade dblclick_modal" tabindex="-1" role="dialog"
-     aria-labelledby="dblclick_modal_label" aria-hidden="true" data-backdrop="static"
-     data-keyboard="false">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-    <h3 id="dblclick_modal_label"></h3>
-  </div>
-  <div class="modal-body">
-    <div class="modal-body-div"><label id="dblclick_text" style="display: block;"></label></div>
-  </div>
-  <div class="modal-footer">
-    <button class="btn btn-success" id="add_lineage_btn">Add Lineage</a>
-    <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
-  </div>
-</div>
+{% include "modals.html" %}
 
 </body>
 </html>

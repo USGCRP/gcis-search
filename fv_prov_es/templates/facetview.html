@@ -56,11 +56,15 @@
 
   <script type="text/javascript" src="{{ url_for('static', filename='d3-3.5.5/d3.min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='d3-tip-0.6.3/d3.tip.v0.6.3.js') }}"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename='prov-es-fdl/prov-es-fdl-facetview.js') }}"></script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='prov-es-fdl/prov-es-fdl-facetview.css') }}">
+  <script type="text/javascript" src="{{ url_for('static', filename='prov-es-fdl/prov-es-fdl.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='prov-es-fdl/prov-es-fdl.css') }}">
 
 
   <style>
+    #chart {
+      background: #eee;
+    }
+
     .location_search_map {
       width: 100%;
       height: 400px;
@@ -134,89 +138,20 @@
 
   </style>
 
+  {% include "utils.html" %}
+
   <script type="text/javascript">
 
-function jq( myid ) {
-  return "#" + myid.replace( /(:|\.|\[|\]|\/)/g, "\\$1" );
-}
+// APP_URL
+var APP_URL = "{{ url_for('.home') }}";
 
-function set_left_margin() {
-  return ($(window).width() - $(this).width())/2;
-}
+// max lineage nodex
+var LINEAGE_NODES_MAX = {{ lineage_nodes_max }};
 
-function show_prov_es_json() {
-  var id = this.id.split("_")[1];
-  $('#prov_es_json_modal_download').attr('disabled', true);
-  $('#prov_es_json_modal_download').attr('href', "{{ url_for('api_v0-1.download_prov_es_json') }}?id=" + id);
-  //console.log(id);
-  $.ajax({
-    url: "{{ url_for('api_v0-1.prov_es_json') }}",
-    data: { id: id },
-    success: function(data, sts, xhr) {
-      //console.log(data);
-      var json_str = JSON.stringify(data['result']['prov_es_json'], null, '  ');
-      $('#prov_es_json_text').html('<pre>' + json_str + '</pre>');
-      $('#prov_es_json_modal').modal('show').css({'left': set_left_margin});
-    },
-    error: function(xhr, sts, err) {
-      //console.log(xhr);
-      $('#general_error').html("Error: " + xhr.responseText);
-      $('#error_modal').modal('show').css({'left': set_left_margin});
-    }
-  });
-}
-
-function show_prov_es_ttl() {
-  var id = this.id.split("_")[1];
-  $('#prov_es_ttl_modal_download').attr('disabled', true);
-  $('#prov_es_ttl_modal_download').attr('href', "{{ url_for('api_v0-1.download_prov_es_ttl') }}?id=" + id);
-  //console.log(id);
-  $.ajax({
-    url: "{{ url_for('api_v0-1.prov_es_ttl') }}",
-    data: { id: id },
-    success: function(data, sts, xhr) {
-      //console.log(data);
-      var ttl = data['result'].replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      $('#prov_es_ttl_text').html('<pre>' + ttl + '</pre>');
-      $('#prov_es_ttl_modal').modal('show').css({'left': set_left_margin});
-    },
-    error: function(xhr, sts, err) {
-      //console.log(xhr);
-      $('#general_error').html("Error: " + xhr.responseText);
-      $('#error_modal').modal('show').css({'left': set_left_margin});
-    }
-  });
-}
-
-
-function linkify_newsearch(id) {
-  var ns_div = $(jq(id));
-  $(ns_div).next('br').remove();
-  var link = $(ns_div).find('a');
-  if (link.length > 0) {
-    var link_text = link.text();
-    link.attr("href", '?source={"query":{"query_string":{"query":"\\"' + link_text + '\\""}}}');
-  }else {
-    $(ns_div).remove();
-  }
-}
-
-
-function get_icon(concept) {
-  if (concept === "entity") {
-    return "<img src='{{ url_for('static', filename='facetview/img/entity.png') }}' class='img-rounded'/>";
-  }else if (concept === "activity") {
-    return "<img src='{{ url_for('static', filename='facetview/img/activity.png') }}' class='img-rounded'/>";
-  }else if (concept === "agent") {
-    return "<img src='{{ url_for('static', filename='facetview/img/agent.png') }}' class='img-rounded'/>";
-  //}else if (concept === "used") {
-  //  return "<img src='{{ url_for('static', filename='facetview/img/used.png') }}' class='img-rounded'/>";
-  //}else if (concept === "wasGeneratedBy") {
-  //  return "<img src='{{ url_for('static', filename='facetview/img/generated.png') }}' class='img-rounded'/>";
-  }else {
-    return "<img src='{{ url_for('static', filename='facetview/img/relation.png') }}' class='img-rounded'/>";
-  }
-}
+// canvas attributes and height determination function
+var width = null,
+    height = null;
+function get_height() { return 500; }
 
 
 // global backdrop
@@ -224,6 +159,12 @@ var backdrop = null;
 
 
 jQuery(document).ready(function($) {
+
+  // set canvas attributes
+  width = $('#chart').innerWidth();
+  height = get_height();
+
+
   Tags.bootstrapVersion = "2";
 
   $('.facet-view-simple').facetview({
@@ -234,25 +175,26 @@ jQuery(document).ready(function($) {
         {'field':'prov:type.raw', 'display': 'prov:type'},
         {'field':'prov:label.raw', 'display': 'prov:label'},
         {'field':'prov:entity.raw', 'display': 'prov:entity'},
-        {'field':'prov:agent.raw', 'display': 'prov:agent'},
         {'field':'prov:activity.raw', 'display': 'prov:activity'},
+        {'field':'prov:agent.raw', 'display': 'prov:agent'},
         {'field':'prov:role.raw', 'display': 'prov:role'},
-        {'field':'prov:startTime', 'display': 'prov:startTime', 'type': 'date'},
-        {'field':'prov:endTime', 'display': 'prov:endTime', 'type': 'date'},
-        {'field':'prov:collection.raw', 'display': 'prov:collection'},
-        {'field':'gcis:sourceInstrument.raw', 'display': 'gcis:sourceInstrument'},
-        {'field':'eos:level.raw', 'display': 'eos:level'},
+        {'field':'prov:location.raw', 'display': 'prov:location'},
+        {'field':'eos:partOfCollection.raw', 'display': 'eos:partOfCollection'},
         {'field':'eos:version.raw', 'display': 'eos:version'},
         {'field':'eos:usesSoftware.raw', 'display': 'eos:usesSoftware'},
+        {'field':'gcis:implements.raw', 'display': 'gcis:implements'},
+        {'field':'gcis:implementedIn.raw', 'display': 'gcis:implementedIn'},
+        {'field':'gcis:sourceInstrument.raw', 'display': 'gcis:sourceInstrument'},
         {'field':'gcis:hasInstrument.raw', 'display': 'gcis:hasInstrument'},
+        {'field':'gcis:inInstrument.raw', 'display': 'gcis:inInstrument'},
         {'field':'gcis:inPlatform.raw', 'display': 'gcis:inPlatform'},
         {'field':'gcis:hasSensor.raw', 'display': 'gcis:hasSensor'},
         {'field':'gcis:hasGoverningOrganization.raw', 'display': 'gcis:hasGoverningOrganization'},
-        {'field':'gcis:inInstrument.raw', 'display': 'gcis:inInstrument'},
-        {'field':'gcis:implements.raw', 'display': 'gcis:implements'},
-        {'field':'gcis:implementedIn.raw', 'display': 'gcis:implementedIn'},
+        {'field':'prov:startTime', 'display': 'prov:startTime', 'type': 'date'},
+        {'field':'prov:endTime', 'display': 'prov:endTime', 'type': 'date'},
+        {'field':'prov:collection.raw', 'display': 'prov:collection'},
+        {'field':'eos:level.raw', 'display': 'eos:level'},
         {'field':'gcis:describedBy.raw', 'display': 'gcis:describedBy'},
-        {'field':'eos:usesSoftware.raw', 'display': 'eos:usesSoftware'},
         //{'field':'hysds:host.raw', 'display': 'hysds:host'},
         {'field':'eos:hasRuntimeParameter.raw', 'display': 'eos:hasRuntimeParameter'}
     ],
@@ -398,576 +340,22 @@ jQuery(document).ready(function($) {
 */
       [
         {
-          "pre": "<div id='newsearch_id_",
+          "pre": "<div id='prov_es_info_",
           "field": "_id",
           "post": "'>"
         },
         {
-          "pre": "id: <a>",
-          "field": "_id",
-          "post": "</a>"
-        },
-        {
           "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_id_",
+                 "  var id = '",
           "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_provtype_",
-          "field": "_id",
-          "post": "'>"
+          "post": "';\n"
         },
         {
-          "pre": "prov:type: <a>",
-          "field": "prov:type",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_provtype_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_provlabel_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "prov:label: <a>",
-          "field": "prov:label",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_provlabel_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_provrole_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "prov:role: <a>",
-          "field": "prov:role",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_provrole_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_jobid_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "hysds:job_id: <a>",
-          "field": "hysds:job_id",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_jobid_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_doi_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "info:doi: <a>",
-          "field": "info:doi",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_doi_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "prov:location: <font color='blue'>",
-          "field": "prov:location",
-          "post": "</font>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_sourceInstrument_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "gcis:sourceInstrument: <a>",
-          "field": "gcis:sourceInstrument",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_sourceInstrument_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_level_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "eos:level: <a>",
-          "field": "eos:level",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_level_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_version_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "eos:version: <a>",
-          "field": "eos:version",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_version_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_hasInstrument_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "gcis:hasInstrument: <a>",
-          "field": "gcis:hasInstrument",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_hasInstrument_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_inPlatform_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "gcis:inPlatform: <a>",
-          "field": "gcis:inPlatform",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_inPlatform_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_hasSensor_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "gcis:hasSensor: <a>",
-          "field": "gcis:hasSensor",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_hasSensor_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_hasGoverningOrganization_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "gcis:hasGoverningOrganization: <a>",
-          "field": "gcis:hasGoverningOrganization",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_hasGoverningOrganization_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_inInstrument_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "gcis:inInstrument: <a>",
-          "field": "gcis:inInstrument",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_inInstrument_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_implements_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "gcis:implements: <a>",
-          "field": "gcis:implements",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_implements_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_implementedIn_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "gcis:implementedIn: <a>",
-          "field": "gcis:implementedIn",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_implementedIn_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_describedBy_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "eos:describedBy: <a>",
-          "field": "eos:describedBy",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_describedBy_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_usesSoftware_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "eos:usesSoftware: <a>",
-          "field": "eos:usesSoftware",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_usesSoftware_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_wasAssociatedWith_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "prov:wasAssociatedWith: <a>",
-          "field": "prov:wasAssociatedWith",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_wasAssociatedWith_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_runTimeContext_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "eos:runTimeContext: <a>",
-          "field": "eos:runTimeContext",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_runTimeContext_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_pid_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "hysds:pid: <a>",
-          "field": "hysds:pid",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_pid_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_host_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "hysds:host: <a>",
-          "field": "hysds:host",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_host_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_hasRuntimeParameter_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "eos:hasRuntimeParameter: <a>",
-          "field": "eos:hasRuntimeParameter",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_hasRuntimeParameter_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_provtime_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "prov:time: <a>",
-          "field": "prov:time",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_provtime_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_activity_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "prov:activity: <a>",
-          "field": "prov:activity",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_activity_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_entity_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "prov:entity: <a>",
-          "field": "prov:entity",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_entity_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_collection_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "prov:collection: <a>",
-          "field": "prov:collection",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_collection_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_provstartTime_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "prov:startTime: <a>",
-          "field": "prov:startTime",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_provstartTime_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<div id='newsearch_provendTime_",
-          "field": "_id",
-          "post": "'>"
-        },
-        {
-          "pre": "prov:endTime: <a>",
-          "field": "prov:endTime",
-          "post": "</a>"
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  linkify_newsearch('newsearch_provendTime_",
-          "field": "_id",
-          "post": "');});<\/script>"
-        }
-      ],
-      [
-        {
-          "pre": "<b>json:</b><br/>",
-          "field": "href",
-          "post": ""
-        }
-      ],
-      [
-        {
-          "pre": '<br/><table><tr><td><a class="btn btn-primary" id="provesjson_',
-          "field": "_id",
-          "post": '">JSON</a>'
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  var link = $(jq('provesjson_",
-          "field": "_id",
-          "post": "'));\n" +
-                  "  $(link).on('click', show_prov_es_json);\n" +
-                  "});<\/script></td>"
-        },
-        {
-          "pre": '<td><a class="btn btn-inverse" id="provesttl_',
-          "field": "_id",
-          "post": '">Turtle</a>'
-        },
-        {
-          "pre": "</div><script>$(function() {\n" +
-                 "  var link = $(jq('provesttl_",
-          "field": "_id",
-          "post": "'));\n" +
-                  "  $(link).on('click', show_prov_es_ttl);\n" +
-                  "});<\/script></td>"
-        },
-        {
-          "pre": '<td><a class="btn btn-success" id="fdl_lineage_',
-          "field": "_id",
-          "post": '"'
-        },
-        {
-          "pre": " href=\"{{ url_for('.fdl') }}?id=",
-          "field": "_id",
-          "post": '" target="_blank">Lineage Graph</a></td></tr></table>'
+          "pre": "  var doc = ",
+          "field": null,
+          "post": ";\n" +
+                 "  show_prov_es_info('prov_es_info_' + id, doc);\n" +
+                 "});<\/script>"
         }
       ]
     ]
@@ -1420,16 +808,6 @@ jQuery(document).ready(function($) {
     }
   });
 
-  // handler for prov_es_json_modal
-  $('#prov_es_json_modal').on('show', function() {
-    $('#prov_es_json_modal_download').attr('disabled', false);
-  });
-
-  // handler for prov_es_ttl_modal
-  $('#prov_es_ttl_modal').on('show', function() {
-    $('#prov_es_ttl_modal_download').attr('disabled', false);
-  });
-
   // open up all facets on page load
   $('.facetview_filtershow').each(function(index, value) {
     $(value).click();
@@ -1643,200 +1021,7 @@ jQuery(document).ready(function($) {
     <!--<h4>GRQ facets</h4>-->
     <div class="facet-view-simple"></div>
 
-    <!-- create rule modal -->
-    <div id="rule_modal" class="modal hide fade" tabindex="-1" role="dialog"
-         aria-labelledby="rule_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="rule_modal_label">Monitor This</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div">
-          <form id="rule_form" class="form-horizontal">
-            <input type="hidden" id="rule_id"/>
-            <input type="hidden" id="workflow_val"/>
-            <input type="hidden" id="kwargs"/>
-            <div class="control-group">
-              <label class="control-label" for="rule_name">Rule name</label>
-              <div class="controls">
-                <input class="field span4" type="text" id="rule_name" name="rule_name" placeholder="e.g. Email Calimap">
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="query_string">Condition</label>
-              <div class="controls">
-                <textarea class="field span4" type="textarea" rows="5" id="query_string" name="query_string"></textarea>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="workflow">Action</label>
-              <div class="controls">
-                <select class="field span4" name="workflow" id="workflow"></select>
-              </div>
-            </div>
-            <fieldset id="dynamic_fields" />
-          </form>
-        </div>
-        <div>
-          <label id="ajax_error" class="error" style="display: block;"></label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn cancel_rule" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <button id="rule_btn" class="btn btn-primary">OK</button>
-      </div>
-    </div>
-
-    <!-- process this modal -->
-    <div id="procthis_modal" class="modal hide fade" tabindex="-1" role="dialog"
-         aria-labelledby="procthis_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="procthis_modal_label">Monitor This</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div">
-          <form id="procthis_form" class="form-horizontal">
-            <input type="hidden" id="procthis_workflow_val"/>
-            <input type="hidden" id="procthis_kwargs"/>
-            <div class="control-group">
-              <label class="control-label" for="procthis_name">Rule name</label>
-              <div class="controls">
-                <input class="field span4" type="text" id="procthis_name" name="procthis_name" placeholder="e.g. Email Calimap">
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="query_string">Condition</label>
-              <div class="controls">
-                <textarea class="field span4" type="textarea" rows="5" id="procthis_query_string" name="query_string"></textarea>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" for="workflow">Action</label>
-              <div class="controls">
-                <select class="field span4" name="workflow" id="procthis_workflow"></select>
-              </div>
-            </div>
-            <fieldset id="procthis_dynamic_fields" />
-          </form>
-        </div>
-        <div>
-          <label id="procthis_ajax_error" class="error" style="display: block;"></label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn cancel_rule" data-dismiss="modal" aria-hidden="true">Cancel</button>
-        <button id="procthis_btn" class="btn btn-primary">Process Now</button>
-      </div>
-    </div>
-
-    <!-- list my rules modal -->
-    <div id="list_rules_modal" class="modal hide fade list_rules_modal" tabindex="-1" role="dialog"
-         aria-labelledby="list_rules_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="list_rules_modal_label">My Rules</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div">
-          <table id="rules_table" cellspacing="1" cellpadding="3" class="tablehead" style="background:#CCC;">
-            <caption>
-              These are the rules you have defined.
-            </caption>
-            <thead>
-              <tr class="colhead">
-                <th>Name</th>
-                <th>Condition</th>
-                <th>Action</th>
-                <th>Keyword Args</th>
-                <th class="{sorter: false}">Status</th>
-                <th class="{sorter: false}">Edit</th>
-                <th class="{sorter: false}">Delete</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
-        </div>
-
-      </div>
-      <div class="modal-footer">
-        <button class="btn close_list_rules" data-dismiss="modal" aria-hidden="true">Close</button>
-      </div>
-    </div>
-
-    <!-- confirm deletion modal -->
-    <div id="confirm_delete_modal" class="modal hide fade" tabindex="-1" role="dialog"
-         aria-labelledby="confirm_delete_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="confirm_delete_modal_label">Delete Confirmation</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div">
-          <p>Are you sure you want to delete the rule named "<b id="delete_rule_name"></b>"?</p>
-          <input type="hidden" id="delete_rule_id"/>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn cancel_confirm_delete" data-dismiss="modal" aria-hidden="true">No</button>
-        <button id="confirm_delete_btn" class="btn btn-primary confirm_delete">Yes</button>
-      </div>
-    </div>
-
-    <!-- error message modal -->
-    <div id="error_modal" class="modal hide fade error_modal" tabindex="-1" role="dialog"
-         aria-labelledby="error_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="error_modal_label">Encountered Error</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div"><label id="general_error" class="error" style="display: block;"></label></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
-      </div>
-    </div>
-
-    <!-- prov_es_json modal -->
-    <div id="prov_es_json_modal" class="modal hide fade prov_es_json_modal" tabindex="-1" role="dialog"
-         aria-labelledby="prov_es_json_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="prov_es_json_modal_label">PROV-ES JSON</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div"><label id="prov_es_json_text" style="display: block;"></label></div>
-      </div>
-      <div class="modal-footer">
-        <a class="btn btn-success" target="_blank" id="prov_es_json_modal_download" href="">Download</a>
-        <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
-      </div>
-    </div>
-
-    <!-- prov_es_ttl modal -->
-    <div id="prov_es_ttl_modal" class="modal hide fade prov_es_ttl_modal" tabindex="-1" role="dialog"
-         aria-labelledby="prov_es_ttl_modal_label" aria-hidden="true" data-backdrop="static"
-         data-keyboard="false">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3 id="prov_es_ttl_modal_label">PROV-ES Turtle</h3>
-      </div>
-      <div class="modal-body">
-        <div class="modal-body-div"><label id="prov_es_ttl_text" style="display: block;"></label></div>
-      </div>
-      <div class="modal-footer">
-        <a class="btn btn-success" target="_blank" id="prov_es_ttl_modal_download" href="">Download</a>
-        <button class="btn close_error" data-dismiss="modal" aria-hidden="true">Close</button>
-      </div>
-    </div>
+    {% include "modals.html" %}
 
   </div>
 

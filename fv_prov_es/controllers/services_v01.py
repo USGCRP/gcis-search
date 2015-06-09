@@ -1,4 +1,4 @@
-import os, sys, json, requests
+import os, sys, json, requests, traceback
 from datetime import datetime
 
 from flask import Blueprint, request, redirect, url_for, Response, current_app
@@ -223,6 +223,7 @@ SAMPLE_PROV_ES_JSON = """{
   }, 
   "used": {
     "ex1:used-file-1": {
+      "prov:role": "input",
       "prov:time": "2015-03-22T16:07:05.195235+00:00", 
       "prov:entity": "ex1:file-1",
       "prov:activity": "ex1:my-md5sum-activity"
@@ -240,23 +241,42 @@ SAMPLE_PROV_ES_JSON = """{
   }, 
   "entity": {
     "ex1:file-1": {
-      "prov:location": "http://path/to/my/input-file"
+      "prov:location": "http://path/to/my/input-file",
+      "prov:type": {
+        "type": "prov:QualifiedName",
+        "$": "eos:granule"
+      }
     }, 
     "ex1:md5sum-file": {
-      "prov:location": "http://path/to/my/output-file"
+      "prov:location": "http://path/to/my/output-file",
+      "prov:type": {
+        "type": "prov:QualifiedName",
+        "$": "eos:product"
+      }
     }
   }, 
   "activity": {
     "ex1:my-md5sum-activity": {
       "prov:wasAssociatedWith": "ex1:my-software-agent",
-      "dcterms:title": "md5sum command",
+      "prov:label": "md5sum command",
       "prov:startTime": "2015-03-22T14:55:43.906447+00:00", 
-      "prov:type": "eos:processStep", 
+      "prov:type": {
+        "type": "prov:QualifiedName",
+        "$": "eos:processStep"
+      },
       "prov:endTime": "2015-03-22T14:56:43.906447+00:00"
     }
   }, 
+  "wasAssociatedWith": {
+    "hysds:my-activity-agent-association": {
+      "prov:role": "softwareAgent",
+      "prov:agent": "ex1:my-software-agent",
+      "prov:activity": "ex1:my-md5sum-activity"
+    }
+  },
   "wasGeneratedBy": {
     "ex1:generated-md5sum-file": {
+      "prov:role": "output",
       "prov:time": "2015-03-22T14:56:43.906447+00:00",
       "prov:entity": "ex1:md5sum-file",
       "prov:activity": "ex1:my-md5sum-activity"
@@ -285,7 +305,7 @@ class ImportProvEs(Resource):
     @api.marshal_with(resp_model)
     def post(self):
         # get PROV-ES json
-        prov_es = request.args.get('prov_es', None)
+        prov_es = request.form.get('prov_es', request.args.get('prov_es', None))
         if prov_es is None:
             return { 'success': False,
                      'message': "Missing prov_es parameter.",
@@ -309,6 +329,8 @@ class ImportProvEs(Resource):
         conn = get_es_conn(es_url, es_index, alias)
         try: import_prov(conn, es_index, alias, pej)
         except Exception, e:
+            current_app.logger.debug("Got error: %s" % e)
+            current_app.logger.debug("Traceback: %s" % traceback.format_exc())
             message = "Failed to import PROV-ES json. Check that your PROV-ES JSON conforms to PROV-JSON."
             current_app.logger.debug(message)
             return { 'success': False,

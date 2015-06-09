@@ -903,23 +903,21 @@ search box - the end user will not know they are happening.
                 line = "";
                 for ( var object = 0; object < display[lineitem].length; object++ ) {
                     var thekey = display[lineitem][object]['field'];
-                    parts = thekey.split('.');
-                    // TODO: this should perhaps recurse..
-                    if (parts.length == 1) {
-                        var res = record;
-                    } else if (parts.length == 2) {
-                        var res = record[parts[0]];
-                    } else if (parts.length == 3) {
-                        var res = record[parts[0]][parts[1]];
+                    if (thekey === null) {
+                        var res = JSON.stringify(record);
+                    } else {
+                        parts = thekey.split('.');
+                        for ( var i = 0; i < parts.length; i++ ) {
+                            var res = record[parts[i]];
+                        }
                     }
-                    var counter = parts.length - 1;
                     if (res && res.constructor.toString().indexOf("Array") == -1) {
-                        var thevalue = res[parts[counter]];  // if this is a dict
+                        var thevalue = res;  // if this is a dict
                     } else {
                         var thevalue = [];
                         if ( res !== undefined ) {
                             for ( var row = 0; row < res.length; row++ ) {
-                                thevalue.push(res[row][parts[counter]]);
+                                thevalue.push(res[row]);
                             }
                         }
                     }
@@ -1010,108 +1008,8 @@ search box - the end user will not know they are happening.
                 svg = null;
             }
 
-            tip = d3.tip()
-                .attr('class', 'd3-tip')
-                .offset([100, 0])
-                .direction('e')
-                .html(function(d) {
-                  if (d.doc === undefined || d.doc === null)
-                    return '<strong>(' + d.concept + ')</strong><br/><pre style="color:#0088CC;font-size:10px;">No JSON to show.</pre>';
-                  var json_str = JSON.stringify(d.doc, null, '  ');
-                  var title = get_text(d);
-                  return '<strong>' + title + '</strong><br/><pre style="color:#0088CC;font-size:10px;">' + json_str + '</pre>';
-                });
-
-            force = d3.layout.force()
-                .nodes(nodes)
-                .links(links)
-                .linkDistance(150)
-                .charge(-500)
-                .on("tick", tick);
-          
-            svg = d3.select("#chart").append("svg");
-            svg.call(tip);
-
-            // Per-type markers, as they don't inherit styles.
-            defs = svg.append("defs");
-
-            // customize marker for used paths
-            defs.append("marker")
-                .attr("id", "used")
-                .attr("viewBox", "0 -5 10 10")
-                .attr("refX", rectLength - 1)
-                .attr("refY", 0) //-1)
-                .attr("markerWidth", markerLength)
-                .attr("markerHeight", markerLength)
-                .attr("orient", "auto")
-              .append("path")
-                .attr("d", "M0,-5L10,0L0,5");
-            
-            // customize marker for wasGenerated paths
-            defs.append("marker")
-                .attr("id", "wasGeneratedBy")
-                .attr("viewBox", "0 -5 10 10")
-                .attr("refX", radiusLength + markerLength)
-                .attr("refY", 0) //-1)
-                .attr("markerWidth", markerLength)
-                .attr("markerHeight", markerLength)
-                .attr("orient", "auto")
-              .append("path")
-                .attr("d", "M0,-5L10,0L0,5");
-            
-            // customize marker for associated paths
-            defs.append("marker")
-                .attr("id", "associated")
-                .attr("viewBox", "0 -5 10 10")
-                .attr("refX", radiusLength + markerLength)
-                .attr("refY", -1)
-                .attr("markerWidth", markerLength)
-                .attr("markerHeight", markerLength)
-                .attr("orient", "auto")
-              .append("path")
-                .attr("d", "M0,-5L10,0L0,5");
-                
-            // customize marker for controlled paths
-            defs.append("marker")
-                .attr("id", "controlled")
-                .attr("viewBox", "0 -5 10 10")
-                .attr("refX", radiusLength + markerLength)
-                .attr("refY", -2.5)
-                .attr("markerWidth", markerLength)
-                .attr("markerHeight", markerLength)
-                .attr("orient", "auto")
-              .append("path")
-                .attr("d", "M0,-5L10,0L0,5");
-                
-            // customize marker for entity to entity related paths
-            defs.append("marker")
-                .attr("id", "e2e_related")
-                .attr("viewBox", "0 -5 10 10")
-                .attr("refX", rectLength - 1)
-                .attr("refY", 0) //-1)
-                .attr("markerWidth", markerLength)
-                .attr("markerHeight", markerLength)
-                .attr("orient", "auto")
-              .append("path")
-                .attr("d", "M0,-5L10,0L0,5");
-                
-            // customize marker for activity to entity related paths
-            defs.append("marker")
-                .attr("id", "a2e_related")
-                .attr("viewBox", "0 -5 10 10")
-                .attr("refX", rectLength - 1)
-                .attr("refY", 0) //-1)
-                .attr("markerWidth", markerLength)
-                .attr("markerHeight", markerLength)
-                .attr("orient", "auto")
-              .append("path")
-                .attr("d", "M0,-5L10,0L0,5");
-                
-            // add def for info node
-            defs.append("rect")
-                .attr("id", "info")
-                .attr("width", rectLength)
-                .attr("height", rectLength);
+            // initialize FDL
+            initialize_fdl();
 
             // for each filter setup, find the results for it and append them to the relevant filter
             for ( var each = 0; each < options.facets.length; each++ ) {
@@ -1902,6 +1800,7 @@ search box - the end user will not know they are happening.
 
         thefacetview += '<div style="clear:both;" class="btn-toolbar" id="facetview_selectedfilters"></div>';
         options.pager_on_top ? thefacetview += '<div class="facetview_metadata" style="margin-top:20px;"></div>' : "";
+        thefacetview += '<div class="facetview_fdl_container">';
         thefacetview += '<div class="facetview_labeltoggles_container">';
         thefacetview += '<button class="btn" id="toggle_force">Force</button>&nbsp;';
         thefacetview += '<button class="btn" id="toggle_agent_labels">Agent Labels</button>&nbsp;';
@@ -1909,7 +1808,7 @@ search box - the end user will not know they are happening.
         thefacetview += '<button class="btn" id="toggle_entity_labels">Entity Labels</button>&nbsp;';
         thefacetview += '<button class="btn" id="toggle_path_labels">Relation Labels</button>';
         thefacetview += '</div><br/>';
-        thefacetview += '<div class="facetview_plots_container"><div id="chart" class="img-rounded" /></div><br/>';
+        thefacetview += '<div class="facetview_plots_container"><div id="chart" class="img-rounded" /></div></div><br/>';
         thefacetview += options.searchwrap_start + options.searchwrap_end;
         thefacetview += '<div class="facetview_metadata"></div></div></div></div>';
 

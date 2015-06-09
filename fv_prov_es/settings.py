@@ -17,6 +17,9 @@ class Config(object):
     DESCRIPTION = "PROV-ES faceted search interface for GCIS"
     BADGE = "DEV"
 
+    # max lineage nodes to add to FDL per query; if exceeded, prompt user
+    LINEAGE_NODES_MAX = 50
+
 
 class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///../database.db'

@@ -1,5 +1,6 @@
 import os, sys, json, requests, copy, types
 from pyes import ES, TermQuery
+from pyes.exceptions import SearchPhaseExecutionException
 from flask import current_app
 
 from prov_es.model import get_uuid
@@ -40,8 +41,12 @@ def import_prov(conn, index, alias, prov_es_json):
         if concept == 'prefix': continue
         elif concept == 'bundle':
             for bundle_id in prov_es_json['bundle']:
-                if len(conn.search(query=TermQuery("_id", bundle_id),
-                                   indices=[alias])) > 0: continue
+                try:
+                    found = len(conn.search(query=TermQuery("_id", bundle_id),
+                                            indices=[alias]))
+                except SearchPhaseExecutionException:
+                    found = 0
+                if found > 0: continue
                 bundle_prov = copy.deepcopy(prov_es_json['bundle'][bundle_id])
                 bundle_prov['prefix'] = prefix
                 bundle_doc = {
@@ -59,15 +64,23 @@ def import_prov(conn, index, alias, prov_es_json):
                         doc['prov_es_json'].setdefault(b_concept, {})[i] = prov_doc
                         if 'prov:type' in doc and isinstance(doc['prov:type'], types.DictType):
                             doc['prov:type'] = doc['prov:type'].get('$', '')
-                        if len(conn.search(query=TermQuery("_id", i),
-                                           indices=[alias])) > 0: pass
+                        try:
+                            found = len(conn.search(query=TermQuery("_id", i),
+                                                    indices=[alias]))
+                        except SearchPhaseExecutionException:
+                            found = 0
+                        if found > 0: pass
                         else: conn.index(doc, index, b_concept, i)
                         bundle_doc[b_concept].append(i)
                 conn.index(bundle_doc, index, 'bundle', bundle_id)
         else:
             for i in prov_es_json[concept]:
-                if len(conn.search(query=TermQuery("_id", i),
-                                   indices=[alias])) > 0: continue
+                try:
+                    found = len(conn.search(query=TermQuery("_id", i),
+                                            indices=[alias]))
+                except SearchPhaseExecutionException:
+                    found = 0
+                if found > 0: continue
                 doc = prov_es_json[concept][i]
                 prov_doc = copy.deepcopy(doc)
                 doc['identifier'] =  i

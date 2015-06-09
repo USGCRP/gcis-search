@@ -1,9 +1,5 @@
 // set canvas attributes
-var width = $('#chart').innerWidth(),
-    height = window.innerHeight - 
-             parseInt($('body').css('padding-top').replace("px", "")) + 
-             parseInt($('body').css('padding-bottom').replace("px", "")),
-    radiusLength = 15,
+var radiusLength = 15,
     polyLength = 10,
     rectLength = 18,
     markerLength = 6;
@@ -25,8 +21,10 @@ var nodeTextGroup = null;
 var pathTextGroup = null;
 var entsGroup = null;
 var actsGroup = null;
-var dblclickedNode = null;
 var forceEnabled = false;
+var clickedOnce = false;
+var timer;
+var lineageData;
 
 // concepts to hide label for
 var hideLabel = {
@@ -38,6 +36,12 @@ var hideLabel = {
 
 // show human readable name
 var showHumanReadable = true;
+
+
+// helper to escape special chars in ID
+function jq( myid ) {
+  return "#" + myid.replace( /(:|\.|\[|\]|\/)/g, "\\$1" );
+}
 
 
 // return random integer between 2 numbers
@@ -134,9 +138,7 @@ function set_left_margin() {
 // resize canvas
 function resize() {
   width = $('#chart').innerWidth();
-  height = window.innerHeight - 
-           parseInt($('body').css('padding-top').replace("px", "")) + 
-           parseInt($('body').css('padding-bottom').replace("px", ""));
+  height = get_height();
   svg.attr("width", width).attr("height", height);
   force.size([width, height]).resume();
 }
@@ -196,6 +198,20 @@ function link_association(src_x, src_y, tgt_x, tgt_y) {
 }
 
 
+// create delegation links
+function link_delegation(src_x, src_y, tgt_x, tgt_y) {
+  var dx = tgt_x - src_x + rectLength/2,
+      dy = tgt_y - src_y + rectLength/2,
+      dr = Math.sqrt(dx * dx + dy * dy);
+  if (isNaN(dx) || isNaN(dy) || isNaN(dr)) return null;
+  // specify source and target of paths taking into account offsets to get to node center
+  return "M" + Math.max(rectLength, Math.min(width - rectLength, src_x) + rectLength/2) + "," + 
+         Math.max(rectLength, Math.min(height - rectLength, src_y) + rectLength/2) + "A" + dr + 
+         "," + dr + " 0 0,1 " + (Math.max(rectLength, Math.min(width - rectLength, tgt_x)) +  + rectLength/2) + 
+         "," + (Math.max(rectLength, Math.min(height - rectLength, tgt_y)) + rectLength/2);
+}
+
+
 // create controlled links
 function link_controlled(src_x, src_y, tgt_x, tgt_y) {
   var dx = tgt_x - src_x + polyLength/2,
@@ -252,68 +268,83 @@ function link_a2e_related(src_x, src_y, tgt_x, tgt_y, do_curve) {
 
 // Use elliptical arc path segments to doubly-encode directionality.
 function tick() {
-  pathGroup.selectAll("path").attr("d", function(d) {
-    if (d.type == "wasGeneratedBy") {
-      return link_wasGeneratedBy(d.source.x, d.source.y, d.target.x, d.target.y, false);
-    }
-    if (d.type == "used") {
-      return link_used(d.source.x, d.source.y, d.target.x, d.target.y, false);
-    }
-    if (d.type == "associated") {
-      return link_association(d.source.x, d.source.y, d.target.x, d.target.y);
-    }
-    if (d.type == "controlled") {
-      return link_controlled(d.source.x, d.source.y, d.target.x, d.target.y);
-    }
-    if (d.type == "e2e_related") {
-      return link_e2e_related(d.source.x, d.source.y, d.target.x, d.target.y, true);
-    }
-    if (d.type == "a2e_related") {
-      return link_a2e_related(d.source.x, d.source.y, d.target.x, d.target.y, true);
-    }
-  });
+  if (pathGroup) {
+    pathGroup.selectAll("path").attr("d", function(d) {
+      if (d.type == "wasGeneratedBy") {
+        return link_wasGeneratedBy(d.source.x, d.source.y, d.target.x, d.target.y, false);
+      }
+      if (d.type == "used") {
+        return link_used(d.source.x, d.source.y, d.target.x, d.target.y, false);
+      }
+      if (d.type == "associated") {
+        return link_association(d.source.x, d.source.y, d.target.x, d.target.y);
+      }
+      if (d.type == "delegated") {
+        return link_delegation(d.source.x, d.source.y, d.target.x, d.target.y);
+      }
+      if (d.type == "controlled") {
+        return link_controlled(d.source.x, d.source.y, d.target.x, d.target.y);
+      }
+      if (d.type == "e2e_related") {
+        return link_e2e_related(d.source.x, d.source.y, d.target.x, d.target.y, true);
+      }
+      if (d.type == "a2e_related") {
+        return link_a2e_related(d.source.x, d.source.y, d.target.x, d.target.y, true);
+      }
+    });
+  }
 
-  agentGroup.selectAll("polygon").attr("transform", function(d) {
-    var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
-    var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
-    if (isNaN(x) || isNaN(y)) return null;
-    return "translate(" + x + "," + y + ")";
-  });
+  if (agentGroup) {
+    agentGroup.selectAll("polygon").attr("transform", function(d) {
+      var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
+      var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
+      if (isNaN(x) || isNaN(y)) return null;
+      return "translate(" + x + "," + y + ")";
+    });
+  }
 
-  actsGroup.selectAll("circle").attr("transform", function(d) {
-    var x = Math.max(radiusLength, Math.min(width - radiusLength, d.x));
-    var y = Math.max(radiusLength, Math.min(height - radiusLength, d.y));
-    if (isNaN(x) || isNaN(y)) return null;
-    return "translate(" + x + "," + y + ")";
-  });
+  if (actsGroup) {
+    actsGroup.selectAll("circle").attr("transform", function(d) {
+      var x = Math.max(radiusLength, Math.min(width - radiusLength, d.x));
+      var y = Math.max(radiusLength, Math.min(height - radiusLength, d.y));
+      if (isNaN(x) || isNaN(y)) return null;
+      return "translate(" + x + "," + y + ")";
+    });
+  }
 
-  entsGroup.selectAll("rect").attr("transform", function(d) {
-    var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
-    var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
-    if (isNaN(x) || isNaN(y)) return null;
-    return "translate(" + x + "," + y + ")";
-  });
+  if (entsGroup) {
+    entsGroup.selectAll("rect").attr("transform", function(d) {
+      var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
+      var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
+      if (isNaN(x) || isNaN(y)) return null;
+      return "translate(" + x + "," + y + ")";
+    });
+  }
 
-  nodeTextGroup.selectAll("g").attr("transform", function(d) {
-    var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
-    var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
-    if (isNaN(x) || isNaN(y)) return null;
-    return "translate(" + x + "," + y + ")";
-  });
+  if (nodeTextGroup) {
+    nodeTextGroup.selectAll("g").attr("transform", function(d) {
+      var x = Math.max(rectLength, Math.min(width - rectLength, d.x));
+      var y = Math.max(rectLength, Math.min(height - rectLength, d.y));
+      if (isNaN(x) || isNaN(y)) return null;
+      return "translate(" + x + "," + y + ")";
+    });
+  }
 
-  pathTextGroup.selectAll("g").attr("transform", function(d) {
-    //var bbox = $(jq(d.id)).get()[0].getBBox();
-    //var x = Math.floor(bbox.x + bbox.width/2.0);
-    //var y = Math.floor(bbox.y + bbox.height/2.0); 
-    //if (isNaN(x) || isNaN(y)) return null;
-    //return "translate(" + x + "," + y + ")";
-    if (d.source.x > d.target.x) var x = d.target.x + (d.source.x - d.target.x)/2.;
-    else var x = d.source.x + (d.target.x - d.source.x)/2.;
-    if (d.source.y > d.target.y) var y = d.target.y + (d.source.y - d.target.y)/2.;
-    else var y = d.source.y + (d.target.y - d.source.y)/2.;
-    if (isNaN(x) || isNaN(y)) return null;
-    return "translate(" + x + "," + y + ")";
-  });
+  if (pathTextGroup) {
+    pathTextGroup.selectAll("g").attr("transform", function(d) {
+      //var bbox = $(jq(d.id)).get()[0].getBBox();
+      //var x = Math.floor(bbox.x + bbox.width/2.0);
+      //var y = Math.floor(bbox.y + bbox.height/2.0); 
+      //if (isNaN(x) || isNaN(y)) return null;
+      //return "translate(" + x + "," + y + ")";
+      if (d.source.x > d.target.x) var x = d.target.x + (d.source.x - d.target.x)/2.;
+      else var x = d.source.x + (d.target.x - d.source.x)/2.;
+      if (d.source.y > d.target.y) var y = d.target.y + (d.source.y - d.target.y)/2.;
+      else var y = d.source.y + (d.target.y - d.source.y)/2.;
+      if (isNaN(x) || isNaN(y)) return null;
+      return "translate(" + x + "," + y + ")";
+    });
+  }
 }
 
 
@@ -361,6 +392,9 @@ function setGraphVizLocs() {
       }
       if (d.type == "associated") {
         return link_association(d.source.gv_x, d.source.gv_y, d.target.gv_x, d.target.gv_y);
+      }
+      if (d.type == "delegated") {
+        return link_delegation(d.source.gv_x, d.source.gv_y, d.target.gv_x, d.target.gv_y);
       }
       if (d.type == "controlled") {
         return link_controlled(d.source.gv_x, d.source.gv_y, d.target.gv_x, d.target.gv_y);
@@ -440,6 +474,9 @@ function enableForce() {
       if (d.type == "associated") {
         return link_association(d.source.x, d.source.y, d.target.x, d.target.y);
       }
+      if (d.type == "delegated") {
+        return link_delegation(d.source.x, d.source.y, d.target.x, d.target.y);
+      }
       if (d.type == "controlled") {
         return link_controlled(d.source.x, d.source.y, d.target.x, d.target.y);
       }
@@ -460,6 +497,15 @@ function enableForce() {
       if (isNaN(x) || isNaN(y)) return null;
       return "translate(" + x + "," + y + ")";
   });
+}
+
+
+function getNewNodesCount(json) {
+  var count = 0;
+  json.nodes.forEach(function(n) {
+    if (nodesDict[n.id] === undefined) count++;
+  });
+  return count;
 }
 
 
@@ -575,7 +621,7 @@ function get_text(d) {
       else if (t === undefined) t = 'prov:Agent'
     }
     if (d.type == "e2e_related" || d.type == "a2e_related" || d.type == "associated" 
-        || d.type == "used" || d.type == "wasGeneratedBy" ) var label = "";
+        || d.type == "delegated" || d.type == "used" || d.type == "wasGeneratedBy" ) var label = "";
     else {
       var label = d.doc['prov:label'] !== undefined ? d.doc['prov:label'] :
                   d.doc['dcterms:title'] !== undefined ? d.doc['dcterms:title'] : d.id;
@@ -615,7 +661,7 @@ function restart() {
       }))
     .enter().append("polygon")
       .attr("points", "0,0 " + polyLength*2 + ",0 " + polyLength + "," + polyLength*2)
-      .on("dblclick", dblclick)
+      .on("click", click_dispatcher)
       //.filter(function(d) {
       //    if (hideLabel[d.prov_type]) return true;
       //    return false;
@@ -633,7 +679,7 @@ function restart() {
       }))
     .enter().append("circle")
       .attr("r", radiusLength)
-      .on("dblclick", dblclick)
+      .on("click", click_dispatcher)
       //.filter(function(d) {
       //    if (hideLabel[d.prov_type]) return true;
       //    return false;
@@ -653,7 +699,7 @@ function restart() {
       .attr("class", "entity")
       .attr("width", rectLength)
       .attr("height", rectLength)
-      .on("dblclick", dblclick)
+      .on("click", click_dispatcher)
       //.filter(function(d) {
       //    if (hideLabel[d.prov_type]) return true;
       //    return false;
@@ -730,42 +776,269 @@ function restart() {
   
 }
 
-// handler to open up info window of a node
-function dblclick(d) {
-  dblclickedNode = d3.select(this);
-  //console.log("dblclick");
-  //console.log(dblclickedNode);
-  //console.log(d);
-  /*
-  $('#dblclick_modal_label').text(d.id);
-  var json_str = JSON.stringify(d.doc, null, '  ');
-  $('#dblclick_text').html('<pre>' + json_str + '</pre>');
-  $('#dblclick_modal').modal('show').css({'left': set_left_margin});
-  $('#add_lineage_btn').on('click', function() {
-    $.ajax({
-      url: addVizUrl,
-      data: { id: d.id, lineage: true },
-      success: function(data, sts, xhr) {
-        addNodesAndLinks(data);
-      },
-      error: function(xhr, sts, err) {
-        //console.log(xhr);
-        alert("Error: " + xhr.responseText);
-      }
-    });
-    $('#dblclick_modal').modal('hide');
-  });
-  */
 
+// handler to dispatch to either the click or dblclick handler
+function click_dispatcher(d) {
+  if (d3.event.defaultPrevented) return; // prevent drag from sending click event
+  if (clickedOnce) {
+    dblclick(d);
+  }else {
+    timer = setTimeout(function() {
+      click(d);
+    }, 300);
+    clickedOnce = true; 
+  }
+}
+
+
+// handler to open up info window of a node
+function click(d) {
+  clickedOnce = false;
+  //clickedNode = d3.select(this);
+  //console.log("click");
+  //console.log(clickedNode);
+  //console.log(d);
+  var doc = d.doc;
+  var title = d.id;
+  var info = get_info_snippet(d.id, doc);
+  if (info.title !== null) title = info.title;
+  $('#prov_es_info_modal_label').text(title);
+  //var json_str = JSON.stringify(d.doc, null, '  ');
+  //$('#prov_es_info_text').html('<pre>' + json_str + '</pre>');
+  $('#prov_es_info_text').html(info.html);
+  $('.prov_es_info_modal').linkify();
+  $('#query_lineage_btn').unbind();
+  $('#query_lineage_btn').on('click', function() {
+    $('#prov_es_info_modal').modal('hide');
+    dblclick(d);
+  });
+  $('#prov_es_info_modal').modal('show').css({'left': set_left_margin});
+}
+
+
+// handler to search for lineage of a double-clicked node
+function dblclick(d) {
+  clickedOnce = false;
+  clearTimeout(timer);
   $.ajax({
     url: addVizUrl,
     data: { id: d.id, lineage: true },
     success: function(data, sts, xhr) {
-      addNodesAndLinks(data);
+      var lineage_count = getNewNodesCount(data);
+      if (lineage_count >= LINEAGE_NODES_MAX) {
+        lineageData = data;
+        $('#max_lineage_nodes_text').html('Lineage query found <b><font color="red">' + 
+                                          lineage_count + '</font></b> nodes to add. Do you want to visualize them?');
+        $('#max_lineage_nodes_modal').modal('show').css({'left': set_left_margin});
+      }else {
+        addNodesAndLinks(data);
+      }
     },
     error: function(xhr, sts, err) {
       //console.log(xhr);
       alert("Error: " + xhr.responseText);
     }
   });
+}
+
+
+function get_info_snippet(id, doc) {
+  var html = 'id: <a href=\'' + APP_URL + get_search_link(id) + '\'>' + id + '</a><br/>';
+  var title = null;
+  var job_id = null,
+      job_type = null,
+      mozart_url = null;
+  for (var k in doc) {
+    if (doc.hasOwnProperty(k)) {
+      //console.log(k, doc[k]);
+      // use label as title
+      if (k === "prov:label") title = doc[k];
+
+      // get array of values
+      if (doc[k].constructor === Array) {
+        var vals = doc[k];
+      }else {
+        if (doc[k] === Object(doc[k]) && k == "prov:type") {
+          var vals = [doc[k]['$']];
+        }else { 
+          var vals = [doc[k]];
+        }
+      }
+
+      // detect mozart jobs
+      if (k === "hysds:job_id") job_id = doc[k];
+      if (k === "hysds:job_type") job_type = doc[k];
+      if (k === "hysds:mozart_url") mozart_url = doc[k];
+
+      // generate linkified html for values
+      html += k + ': ';
+      var ns_links = [];
+      for (var i = 0; i < vals.length; i++) {
+        var val = vals[i];
+        if (k === "prov:location" || /_url$/.test(k)) {
+          ns_links.push('<a target="_blank" href="' + val + '">' + val + '</a>');
+        }else {
+          ns_links.push('<a href=\'' + APP_URL + get_search_link(val) + '\'>' + val + '</a>');
+        }
+      }
+      html += ns_links.join(", ") + "<br/>";
+    }
+  }
+
+  // add mozart job url if detected
+  if (job_id !== null && job_type !== null && mozart_url !== null) {
+    html += '<a target="_blank" href=\'' + mozart_url + '?source={"query":{"bool":{"must":[{"term":{"job.job.type":"' + job_type + '"}},{"query_string":{"query":"\\"' + job_id + '\\""}}]}}}\'>view job</a><br/>';
+  }
+
+  // add buttons
+  html += '<br/><table><tr>';
+  html += '<td><a class="btn btn-primary" id="provesjson_' + id + '">JSON</a>';
+  html += '<script>$(function() { $(jq("provesjson_' + id + '")).on("click", show_prov_es_json); });<\/script></td>';
+  html += '<td><a class="btn btn-inverse" id="provesttl_' + id + '">Turtle</a>';
+  html += '<script>$(function() { $(jq("provesttl_' + id + '")).on("click", show_prov_es_ttl); });<\/script></td>';
+  html += '<td><a class="btn btn-success" id="fdl_lineage_' + id + '" href="' + APP_URL + 'fdl?id=' + id + '" target="_blank">';
+  html += 'Lineage Graph</a></td>';
+  html += '</tr></table>';
+
+  return { title: title, html:html };
+}
+
+
+function get_search_link(val) {
+  return '?source={"query":{"query_string":{"query":"\\"' + val + '\\""}}}';
+}
+
+
+function show_prov_es_info(div_id, doc) {
+  //console.log(div_id);
+  //console.log(doc);
+  //console.log(doc._id);
+  //console.log(APP_URL);
+  var id = doc['_id'];
+  var type = doc['_type'];
+  var info = get_info_snippet(id, doc['prov_es_json'][type][id]);
+  var ns_div = $(jq(div_id));
+  $(ns_div).next('br').remove();
+  //console.log(info['html']);
+  $(ns_div).html(info['html']);
+  $(ns_div).linkify();
+}
+
+
+function initialize_fdl() {
+  tip = d3.tip()
+      .attr('class', 'd3-tip')
+      .offset([100, 0])
+      .direction('e')
+      .html(function(d) {
+        if (d.doc === undefined || d.doc === null)
+          return '<strong>(' + d.concept + ')</strong><br/><pre style="color:#0088CC;font-size:10px;">No JSON to show.</pre>';
+        var json_str = JSON.stringify(d.doc, null, '  ');
+        var title = get_text(d);
+        return '<strong>' + title + '</strong><br/><pre style="color:#0088CC;font-size:10px;">' + json_str + '</pre>';
+      });
+  
+  force = d3.layout.force()
+      .nodes(nodes)
+      .links(links)
+      .linkDistance(150)
+      .charge(-500)
+      .on("tick", tick);
+  
+  svg = d3.select("#chart").append("svg");
+
+  svg.call(tip);
+  
+  // Per-type markers, as they don't inherit styles.
+  defs = svg.append("defs");
+  
+  // customize marker for used paths
+  defs.append("marker")
+      .attr("id", "used")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", rectLength - 1)
+      .attr("refY", 0) //-1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+  
+  // customize marker for wasGenerated paths
+  defs.append("marker")
+      .attr("id", "wasGeneratedBy")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", radiusLength + markerLength)
+      .attr("refY", 0) //-1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+  
+  // customize marker for associated paths
+  defs.append("marker")
+      .attr("id", "associated")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", radiusLength + markerLength)
+      .attr("refY", -1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+      
+  // customize marker for delegated paths
+  defs.append("marker")
+      .attr("id", "delegated")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", rectLength - 5)
+      .attr("refY", 0) //-1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+      
+  // customize marker for controlled paths
+  defs.append("marker")
+      .attr("id", "controlled")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", radiusLength + markerLength)
+      .attr("refY", -2.5)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+      
+  // customize marker for entity to entity related paths
+  defs.append("marker")
+      .attr("id", "e2e_related")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", rectLength - 1)
+      .attr("refY", 0) //-1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+      
+  // customize marker for activity to entity related paths
+  defs.append("marker")
+      .attr("id", "a2e_related")
+      .attr("viewBox", "0 -5 10 10")
+      .attr("refX", rectLength - 1)
+      .attr("refY", 0) //-1)
+      .attr("markerWidth", markerLength)
+      .attr("markerHeight", markerLength)
+      .attr("orient", "auto")
+    .append("path")
+      .attr("d", "M0,-5L10,0L0,5");
+      
+  // add def for info node
+  defs.append("rect")
+      .attr("id", "info")
+      .attr("width", rectLength)
+      .attr("height", rectLength);
 }

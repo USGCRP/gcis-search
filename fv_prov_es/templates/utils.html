@@ -1,0 +1,102 @@
+  <script type="text/javascript">
+
+function set_left_margin() {
+  return ($(window).width() - $(this).width())/2;
+}
+
+
+function hide_es_info_modal() {
+  if ($('#prov_es_info_modal').hasClass('in'))
+    $('#prov_es_info_modal').modal('hide');
+}
+
+
+function show_prov_es_json() {
+  var id = this.id.split("_")[1];
+  $('#prov_es_json_modal_download').attr('disabled', true);
+  $('#prov_es_json_modal_download').attr('href', "{{ url_for('api_v0-1.download_prov_es_json') }}?id=" + id);
+  //console.log(id);
+  $.ajax({
+    url: "{{ url_for('api_v0-1.prov_es_json') }}",
+    data: { id: id },
+    success: function(data, sts, xhr) {
+      //console.log(data);
+      var json_str = JSON.stringify(data['result']['prov_es_json'], null, '  ');
+      $('#prov_es_json_text').html('<pre>' + json_str + '</pre>');
+      hide_es_info_modal();
+      $('#prov_es_json_modal').modal('show').css({'left': set_left_margin});
+    },
+    error: function(xhr, sts, err) {
+      //console.log(xhr);
+      $('#general_error').html("Error: " + xhr.responseText);
+      hide_es_info_modal();
+      $('#error_modal').modal('show').css({'left': set_left_margin});
+    }
+  });
+}
+
+
+function show_prov_es_ttl() {
+  var id = this.id.split("_")[1];
+  $('#prov_es_ttl_modal_download').attr('disabled', true);
+  $('#prov_es_ttl_modal_download').attr('href', "{{ url_for('api_v0-1.download_prov_es_ttl') }}?id=" + id);
+  //console.log(id);
+  $.ajax({
+    url: "{{ url_for('api_v0-1.prov_es_ttl') }}",
+    data: { id: id },
+    success: function(data, sts, xhr) {
+      //console.log(data);
+      var ttl = data['result'].replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      $('#prov_es_ttl_text').html('<pre>' + ttl + '</pre>');
+      hide_es_info_modal();
+      $('#prov_es_ttl_modal').modal('show').css({'left': set_left_margin});
+    },
+    error: function(xhr, sts, err) {
+      //console.log(xhr);
+      $('#general_error').html("Error: " + xhr.responseText);
+      hide_es_info_modal();
+      $('#error_modal').modal('show').css({'left': set_left_margin});
+    }
+  });
+}
+
+
+function get_icon(concept) {
+  if (concept === "entity") {
+    return "<img src='{{ url_for('static', filename='facetview/img/entity.png') }}' class='img-rounded'/>";
+  }else if (concept === "activity") {
+    return "<img src='{{ url_for('static', filename='facetview/img/activity.png') }}' class='img-rounded'/>";
+  }else if (concept === "agent") {
+    return "<img src='{{ url_for('static', filename='facetview/img/agent.png') }}' class='img-rounded'/>";
+  //}else if (concept === "used") {
+  //  return "<img src='{{ url_for('static', filename='facetview/img/used.png') }}' class='img-rounded'/>";
+  //}else if (concept === "wasGeneratedBy") {
+  //  return "<img src='{{ url_for('static', filename='facetview/img/generated.png') }}' class='img-rounded'/>";
+  }else {
+    return "<img src='{{ url_for('static', filename='facetview/img/relation.png') }}' class='img-rounded'/>";
+  }
+}
+
+
+jQuery(document).ready(function($) {
+
+  // handler for prov_es_json_modal
+  $('#prov_es_json_modal').on('show', function() {
+    $('#prov_es_json_modal_download').attr('disabled', false);
+  });
+
+  // handler for prov_es_ttl_modal
+  $('#prov_es_ttl_modal').on('show', function() {
+    $('#prov_es_ttl_modal_download').attr('disabled', false);
+  });
+
+  // handler for proceeding with lineage addition
+  $('#proceed_lineage_btn').on('click', function() {
+    $('#max_lineage_nodes_modal').modal('hide');
+    addNodesAndLinks(lineageData);
+    lineageData = null;
+  });
+
+});
+
+  </script>
