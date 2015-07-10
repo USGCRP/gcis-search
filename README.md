@@ -14,7 +14,7 @@ cd scripts
 
 ```
 cd ..
-python setup.py install|develop
+python setup.py install
 ```
 
 
