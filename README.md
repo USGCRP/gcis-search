@@ -18,6 +18,13 @@ python setup.py install
 ```
 
 
+## Run PROV-ES FacetView on port 8888
+
+```
+PROVES_ENV=prod ./manage.py server -h 0.0.0.0 -p 8888
+```
+
+
 ## Demo
 
 http://prov-es.jpl.nasa.gov/beta
