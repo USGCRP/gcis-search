@@ -12,7 +12,10 @@ function hide_es_info_modal() {
 
 
 function show_prov_es_json() {
-  var id = this.id.split("_")[1];
+  var cmps = this.id.split("_");
+  if (cmps.length == 2) var id = cmps[1];
+  else var id = cmps.slice(1).join("_");
+  console.log(id);
   $('#prov_es_json_modal_download').attr('disabled', true);
   $('#prov_es_json_modal_download').attr('href', "{{ url_for('api_v0-1.download_prov_es_json') }}?id=" + id);
   //console.log(id);
@@ -37,7 +40,9 @@ function show_prov_es_json() {
 
 
 function show_prov_es_ttl() {
-  var id = this.id.split("_")[1];
+  var cmps = this.id.split("_");
+  if (cmps.length == 2) var id = cmps[1];
+  else var id = cmps.slice(1).join("_");
   $('#prov_es_ttl_modal_download').attr('disabled', true);
   $('#prov_es_ttl_modal_download').attr('href', "{{ url_for('api_v0-1.download_prov_es_ttl') }}?id=" + id);
   //console.log(id);
