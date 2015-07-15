@@ -63,6 +63,9 @@ def get_image_prov(j, gcis_url):
 
         # create chapter
         r = requests.get('%s%s%s.json' % (gcis_url, report_uri, chapter_uri))
+        if r.status_code != 200:
+            print("Failed with %d code: %s" % (r.status_code, r.content))
+            continue
         r.raise_for_status()
         chapter = r.json()
         chapter_id = GCIS["%s" % chapter_uri[1:].replace('/', '-')]

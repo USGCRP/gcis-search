@@ -14,7 +14,21 @@ cd scripts
 
 ```
 cd ..
-python setup.py install|develop
+python setup.py install
+```
+
+
+## Run PROV-ES FacetView on port 8888
+
+```
+PROVES_ENV=prod ./manage.py server -h 0.0.0.0 -p 8888
+```
+
+
+## import PROV-ES JSON via curl
+
+```
+curl -F "prov_es=<prov_es.json" http://192.168.56.101:8888/api/v0.1/prov_es/import/json
 ```
 
 

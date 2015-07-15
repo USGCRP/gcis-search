@@ -81,11 +81,13 @@ def import_prov(conn, index, alias, prov_es_json):
                 except SearchPhaseExecutionException:
                     found = 0
                 if found > 0: continue
-                doc = prov_es_json[concept][i]
-                prov_doc = copy.deepcopy(doc)
-                doc['identifier'] =  i
-                doc['prov_es_json'] = { 'prefix': prefix }
-                doc['prov_es_json'].setdefault(concept, {})[i] = prov_doc
-                if 'prov:type' in doc and isinstance(doc['prov:type'], types.DictType):
-                    doc['prov:type'] = doc['prov:type'].get('$', '')
-                conn.index(doc, index, concept, i)
+                docs = prov_es_json[concept][i]
+                if not isinstance(docs, types.ListType): docs = [docs]
+                for doc in docs:
+                    prov_doc = copy.deepcopy(doc)
+                    doc['identifier'] =  i
+                    doc['prov_es_json'] = { 'prefix': prefix }
+                    doc['prov_es_json'].setdefault(concept, {})[i] = prov_doc
+                    if 'prov:type' in doc and isinstance(doc['prov:type'], types.DictType):
+                        doc['prov:type'] = doc['prov:type'].get('$', '')
+                    conn.index(doc, index, concept, i)
