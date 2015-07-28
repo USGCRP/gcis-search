@@ -915,7 +915,7 @@ search box - the end user will not know they are happening.
                         var thevalue = res;  // if this is a dict
                     } else {
                         var thevalue = [];
-                        if ( res !== undefined ) {
+                        if ( res !== undefined && res !== null ) {
                             for ( var row = 0; row < res.length; row++ ) {
                                 thevalue.push(res[row]);
                             }
