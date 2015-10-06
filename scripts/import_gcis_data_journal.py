@@ -47,10 +47,10 @@ def index_gcis(gcis_url, es_url, index, alias):
         r2 = requests.get(doc_href, params={ 'all': 1 })
         r2.raise_for_status()
         doc_md = r2.json()
-        print(json.dumps(doc_md, indent=2))
+        #print(json.dumps(doc_md, indent=2))
         prov = get_doc_prov(doc_md, gcis_url)
-        print(json.dumps(prov, indent=2))
-        #import_prov(conn, index, alias, prov)
+        #print(json.dumps(prov, indent=2))
+        import_prov(conn, index, alias, prov)
 
 
 if __name__ == "__main__":

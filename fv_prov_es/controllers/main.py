@@ -448,6 +448,7 @@ def fdl_data():
 
     # do lineage?
     if lineage == "false":
+        #current_app.logger.debug("prov_es_json: %s" % json.dumps(get_prov_es_json(id), indent=2))
         viz_dict = parse_d3(get_prov_es_json(id)['_source']['prov_es_json'])
     else:
         es_url = current_app.config['ES_URL']
