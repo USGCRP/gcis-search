@@ -215,9 +215,26 @@ jQuery(document).ready(function($) {
           "post": "</strong>"
         },
         {
+          "pre": " <strong>",
+          "field": "first_name",
+          "post": ""
+        },
+        {
+          "pre": " ",
+          "field": "last_name",
+          "post": "</strong>"
+        },
+        {
           "pre": " (",
           "field": "_type",
           "post": ")"
+        }
+      ],
+      [
+        {
+          "pre":"<strong>",
+          "field":"",
+          "post": "</strong>"
         }
       ],
       [
@@ -232,6 +249,11 @@ jQuery(document).ready(function($) {
           "pre": "<b>title:</b> <font color='blue'>",
           "field": "title",
           "post": "</font>"
+        },
+        {
+          "pre":" (",
+          "field": "year",
+          "post": ")"
         }
       ],
       [
@@ -292,7 +314,7 @@ jQuery(document).ready(function($) {
           "field": "identifier",
           "post": "';\n" +
                   "});<\/script>"
-        }
+        }, 
       ],
       [
         {
@@ -391,9 +413,30 @@ jQuery(document).ready(function($) {
       ],
       [
         {
+          "pre" : "<b> ORCID: </b>",
+          "field" : "orcid",
+          "post": "\n"
+        }
+      ],
+      [
+        {
+          "pre" : "<b>website: </b> ",
+          "field": "url",
+          "post": "\n"
+        }
+      ],
+      [
+        {
           "pre": "<b>contributors:</b> <font color='blue'>",
-          "field": "contributor_full_name",
+          "field": "contributors.full_name",
           "post": "</font>"
+        }
+      ],
+      [
+        {
+          "pre": "<b>description attribution: </b>",
+          "field": "description_attribution",
+          "post": "\n"
         }
       ],
       [
@@ -401,6 +444,34 @@ jQuery(document).ready(function($) {
           "pre": "<b>description:</b> ",
           "field": "description",
           "post": ""
+        }
+      ],
+      [
+        {
+          "pre": "<b>source: </b> ",
+          "field": "source_citation",
+          "post":"\n"
+        }
+      ],
+      [
+        {
+          "pre": "<b>isbn: </b>",
+          "field": "isbn",
+          "post": "\n"
+        }
+      ],
+      [
+        {
+          "pre": "<b>website: </b>",
+          "field": "website",
+          "post":"\n"
+        }
+      ],
+      [
+        {
+          "pre": "<b>publisher: </b>",
+          "field": "publisher",
+          "post": "\n"
         }
       ],
       [
