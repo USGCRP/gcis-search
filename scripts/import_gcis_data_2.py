@@ -39,7 +39,7 @@ def index_gcis(gcis_url, es_url, index, alias):
     """Index GCIS into PROV-ES ElasticSearch index."""
 
     conn = get_es_conn(es_url, index, alias)
-    r = requests.get('%s/article.json' % gcis_url, params={ 'all': 1 })
+    r = requests.get('%s/article.json' % gcis_url, params={ 'all': 1 }, verify=False)
     r.raise_for_status()
     docs = r.json()
     #print(json.dumps(images, indent=2))
@@ -47,7 +47,7 @@ def index_gcis(gcis_url, es_url, index, alias):
     for doc in docs:
         doc_id = doc['identifier']
         doc_href = doc['href']
-        r2 = requests.get(doc_href, params={ 'all': 1 })
+        r2 = requests.get(doc_href, params={ 'all': 1 }, verify=False)
         r2.raise_for_status()
         doc_md = r2.json()
         #print(json.dumps(doc_md, indent=2))
@@ -60,7 +60,8 @@ if __name__ == "__main__":
     env = os.environ.get('PROVES_ENV', 'prod')
     app = create_app('fv_prov_es.settings.%sConfig' % env.capitalize(), env=env)
     es_url = app.config['ES_URL']
-    gcis_url =  "http://data.globalchange.gov"
+    #gcis_url =  "http://data.globalchange.gov"
+    gcis_url =  "https://localhost:3000"
     dt = datetime.utcnow()
     #index = "%s-%04d.%02d.%02d" % (app.config['PROVES_ES_PREFIX'],
     #                               dt.year, dt.month, dt.day)

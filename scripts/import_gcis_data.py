@@ -49,7 +49,7 @@ def get_image_prov(j, gcis_url):
         figure_uri = "/figure/%s" % figure['identifier']
 
         # create report
-        r = requests.get('%s%s.json' % (gcis_url, report_uri))
+        r = requests.get('%s%s.json' % (gcis_url, report_uri), verify=False)
         r.raise_for_status()
         report = r.json()
         report_id = GCIS["%s" % report_uri[1:].replace('/', '-')]
@@ -62,7 +62,7 @@ def get_image_prov(j, gcis_url):
             reports.append(report_id)
 
         # create chapter
-        r = requests.get('%s%s%s.json' % (gcis_url, report_uri, chapter_uri))
+        r = requests.get('%s%s%s.json' % (gcis_url, report_uri, chapter_uri), verify=False)
         if r.status_code != 200:
             print("Failed with %d code: %s" % (r.status_code, r.content))
             continue
@@ -79,7 +79,7 @@ def get_image_prov(j, gcis_url):
         doc.hadMember(report_id, chapter_id)
          
         # create findings
-        r = requests.get('%s%s%s/finding.json' % (gcis_url, report_uri, chapter_uri))
+        r = requests.get('%s%s%s/finding.json' % (gcis_url, report_uri, chapter_uri), verify=False)
         r.raise_for_status()
         for f in r.json():
             finding_id = GCIS["%s" % f['identifier']]
@@ -94,7 +94,7 @@ def get_image_prov(j, gcis_url):
             doc.hadMember(chapter_id, finding_id)
          
         # create figure
-        r = requests.get('%s%s%s%s.json' % (gcis_url, report_uri, chapter_uri, figure_uri))
+        r = requests.get('%s%s%s%s.json' % (gcis_url, report_uri, chapter_uri, figure_uri), verify=False)
         r.raise_for_status()
         figure_md = r.json()
         figure_id = GCIS["%s" % figure_uri[1:].replace('/', '-')]
@@ -191,15 +191,16 @@ def index_gcis(gcis_url, es_url, index, alias):
     """Index GCIS into PROV-ES ElasticSearch index."""
 
     conn = get_es_conn(es_url, index, alias)
-    r = requests.get('%s/image.json' % gcis_url, params={ 'all': 1 })
+    r = requests.get('%s/image.json' % gcis_url, params={ 'all': 1 }, verify=False)
     r.raise_for_status()
     imgs = r.json()
     #print(json.dumps(images, indent=2))
     #print(len(images))
     for img in imgs:
         img_id = img['identifier']
+        #if img_id != 'f27374a2-d4ef-479c-8f96-9de23fedfc3e': continue
         img_href = img['href']
-        r2 = requests.get(img_href, params={ 'all': 1 })
+        r2 = requests.get(img_href, params={ 'all': '1' }, verify=False)
         r2.raise_for_status()
         img_md = r2.json()
         #print(json.dumps(img_md, indent=2))
@@ -212,7 +213,8 @@ if __name__ == "__main__":
     env = os.environ.get('PROVES_ENV', 'prod')
     app = create_app('fv_prov_es.settings.%sConfig' % env.capitalize(), env=env)
     es_url = app.config['ES_URL']
-    gcis_url =  "http://data.globalchange.gov"
+    #gcis_url =  "http://data.globalchange.gov"
+    gcis_url =  "https://localhost:3000"
     dt = datetime.utcnow()
     #index = "%s-%04d.%02d.%02d" % (app.config['PROVES_ES_PREFIX'],
     #                               dt.year, dt.month, dt.day)
