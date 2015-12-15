@@ -891,14 +891,20 @@ function get_info_snippet(id, doc) {
   }
 
   // add buttons
-  html += '<br/><table><tr>';
-  html += '<td><a class="btn btn-primary" id="provesjson_' + id + '">JSON</a>';
-  html += '<script>$(function() { $(jq("provesjson_' + id + '")).on("click", show_prov_es_json); });<\/script></td>';
-  html += '<td><a class="btn btn-inverse" id="provesttl_' + id + '">Turtle</a>';
-  html += '<script>$(function() { $(jq("provesttl_' + id + '")).on("click", show_prov_es_ttl); });<\/script></td>';
-  html += '<td><a class="btn btn-success" id="fdl_lineage_' + id + '" href="' + APP_URL + 'fdl?id=' + id + '" target="_blank">';
-  html += 'Lineage Graph</a></td>';
-  html += '</tr></table>';
+  //html += '<br/><table><tr>';
+  //html += '<td><a class="btn btn-primary" id="provesjson_' + id + '">JSON</a>';
+  //html += '<script>$(function() { $(jq("provesjson_' + id + '")).on("click", show_prov_es_json); });<\/script></td>';
+  //html += '<td><a class="btn btn-inverse" id="provesttl_' + id + '">Turtle</a>';
+  //html += '<script>$(function() { $(jq("provesttl_' + id + '")).on("click", show_prov_es_ttl); });<\/script></td>';
+  //html += '<td><a class="btn btn-success" id="fdl_lineage_' + id + '" href="' + APP_URL + 'fdl?id=' + id + '" target="_blank">';
+  //html += 'Lineage Graph</a></td>';
+  //html += '</tr></table>';
+  html += '<a class="btn-link" id="provesjson_' + id + '">JSON</a>';
+  html += '<script>$(function() { $(jq("provesjson_' + id + '")).on("click", show_prov_es_json); });<\/script> | ';
+  html += '<a class="btn-link" id="provesttl_' + id + '">Turtle</a>';
+  html += '<script>$(function() { $(jq("provesttl_' + id + '")).on("click", show_prov_es_ttl); });<\/script> | ';
+  html += '<a class="btn-link" id="fdl_lineage_' + id + '" href="' + APP_URL + 'fdl?id=' + id + '" target="_blank">';
+  html += 'Lineage Graph</a>';
 
   return { title: title, html:html };
 }
