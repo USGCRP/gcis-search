@@ -96,13 +96,13 @@ def get_doc_prov(j, gcis_url):
     attrs = []
     for agent_id in agent_ids:
         waw_id = GCIS["%s" % get_uuid("%s:%s" % (act_id, agent_id))]
-        doc.wasAssociatedWith(act_id, agent_id, None, waw_id, {'prov:role': 'gcis:Author'})
+        doc.wasAssociatedWith(act_id, agent_id, None, waw_id, {'prov:role': GCIS['Author']})
         for org_id in agent_ids[agent_id]:
             del_id = GCIS["%s" % get_uuid("%s:%s:%s" % (agent_id, org_id, act_id))]
             doc.delegation(agent_id, org_id, act_id, del_id, {'prov:type': 'gcis:worksAt'})
     for org_id in org_ids:
         waw_id = GCIS["%s" % get_uuid("%s:%s" % (act_id, org_id))]
-        doc.wasAssociatedWith(act_id, org_id, None, waw_id, {'prov:role': 'gcis:Contributor'})
+        doc.wasAssociatedWith(act_id, org_id, None, waw_id, {'prov:role': GCIS['Contributor']})
     act = doc.activity(act_id, start_time, end_time, attrs)
     doc.wasGeneratedBy(article_id, act, end_time, GCIS["%s" % get_uuid("%s:%s" % (article_id, act_id))])
 
