@@ -6,13 +6,14 @@ import requests_cache
 from fv_prov_es import create_app
 from fv_prov_es.lib.import_utils import get_es_conn, import_prov
 
-from prov_es.model import get_uuid, ProvEsDocument, GCIS
+from prov_es.model import (get_uuid, ProvEsDocument, GCIS, PROV, PROV_TYPE,
+    PROV_ROLE, PROV_LABEL, PROV_LOCATION, HYSDS)
 
 
 requests_cache.install_cache('gcis-import')
 
 
-JOURNALS = {}
+journal_ids = {}
 
 def get_doc_prov(j, gcis_url):
     """Generate PROV-ES JSON from GCIS doc metadata."""
@@ -31,7 +32,7 @@ def get_doc_prov(j, gcis_url):
         ( "prov:label", j['title'] ),
     ]
     journal_id = GCIS[j['journal_identifier']]
-    if journal_id not in JOURNALS:
+    if journal_id not in journal_ids:
         if journal_md.get('url', None) is not None:
             doc_attrs.append( ("prov:location", journal_md['url'] ) )
         if journal_md.get('online_issn', None) is not None:
@@ -39,7 +40,36 @@ def get_doc_prov(j, gcis_url):
         if journal_md.get('print_issn', None) is not None:
             doc_attrs.append( ("gcis:print_issn", journal_md['print_issn'] ) )
         doc.entity(journal_id, doc_attrs)
-        JOURNALS[journal_id] = True
+        journal_ids[journal_id] = True
+
+    # create agents or organizations
+    agent_ids = {}
+    org_ids = {}
+    for cont in j.get('contributors', []):
+        # replace slashes because we get prov.model.ProvExceptionInvalidQualifiedName errors
+        agent_id = GCIS["%s" % cont['uri'][1:].replace('/', '-')]
+
+        # create person
+        if len(cont['person']) > 0:
+            # agent 
+            agent_name  = " ".join([cont['person'][i] for i in
+                                    ('first_name', 'middle_name', 'last_name')
+                                    if cont['person'].get(i, None) is not None])
+            doc.agent(agent_id, [
+                ( PROV_TYPE, GCIS["Person"] ),
+                ( PROV_LABEL, agent_name ),
+                ( PROV_LOCATION, "%s%s" % (gcis_url, cont['uri']) ),
+            ])
+            agent_ids[agent_id] = []
+
+        # organization
+        if cont['organization'] is not None and len(cont['organization']) > 0:
+            org = cont['organization']
+            org_id = GCIS["%s" % cont['organization']['identifier']]
+            if org_id not in org_ids:          
+                doc.governingOrganization(org_id, cont['organization']['name'])
+                org_ids[org_id] = True
+            if agent_id in agent_ids: agent_ids[agent_id].append(org_id)
 
     # create article
     article_id = 'bibo:%s' % j['identifier']
@@ -54,7 +84,28 @@ def get_doc_prov(j, gcis_url):
 
     # link
     doc.hadMember(journal_id, article_id)
-           
+
+    # create activity
+    if isinstance(j['year'], int):
+        start_time = str(j['year'])
+        end_time = str(j['year'])
+    else:
+        start_time = None
+        end_time = None
+    act_id = GCIS["generate-%s" % j['identifier'].replace('/', '-')]
+    attrs = []
+    for agent_id in agent_ids:
+        waw_id = GCIS["%s" % get_uuid("%s:%s" % (act_id, agent_id))]
+        doc.wasAssociatedWith(act_id, agent_id, None, waw_id, {'prov:role': 'gcis:Author'})
+        for org_id in agent_ids[agent_id]:
+            del_id = GCIS["%s" % get_uuid("%s:%s:%s" % (agent_id, org_id, act_id))]
+            doc.delegation(agent_id, org_id, act_id, del_id, {'prov:type': 'gcis:worksAt'})
+    for org_id in org_ids:
+        waw_id = GCIS["%s" % get_uuid("%s:%s" % (act_id, org_id))]
+        doc.wasAssociatedWith(act_id, org_id, None, waw_id, {'prov:role': 'gcis:Contributor'})
+    act = doc.activity(act_id, start_time, end_time, attrs)
+    doc.wasGeneratedBy(article_id, act, end_time, GCIS["%s" % get_uuid("%s:%s" % (article_id, act_id))])
+
     # serialize
     prov_json = json.loads(doc.serialize())
 
