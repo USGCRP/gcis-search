@@ -61,7 +61,7 @@ if __name__ == "__main__":
     app = create_app('fv_prov_es.settings.%sConfig' % env.capitalize(), env=env)
     es_url = app.config['ES_URL']
     #gcis_url =  "http://data.globalchange.gov"
-    gcis_url =  "https://localhost:3000"
+    gcis_url =  "https://gcis-search-stage.jpl.net:3000"
     dt = datetime.utcnow()
     #index = "%s-%04d.%02d.%02d" % (app.config['PROVES_ES_PREFIX'],
     #                               dt.year, dt.month, dt.day)
