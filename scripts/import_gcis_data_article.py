@@ -6,11 +6,13 @@ import requests_cache
 from fv_prov_es import create_app
 from fv_prov_es.lib.import_utils import get_es_conn, import_prov
 
-from prov_es.model import get_uuid, ProvEsDocument
+from prov_es.model import get_uuid, ProvEsDocument, GCIS
 
 
 requests_cache.install_cache('gcis-import')
 
+
+JOURNALS = {}
 
 def get_doc_prov(j, gcis_url):
     """Generate PROV-ES JSON from GCIS doc metadata."""
@@ -20,14 +22,38 @@ def get_doc_prov(j, gcis_url):
     doc = ProvEsDocument(namespaces={ "gcis": gcis_ns, "bibo": "http://purl.org/ontology/bibo/" })
     bndl = None
 
+    # create journal
+    r = requests.get("%s/journal/%s.json" % (gcis_url, j['journal_identifier']), params={ 'all': 1 }, verify=False)
+    r.raise_for_status()
+    journal_md = r.json()
+    doc_attrs = [
+        ( "prov:type", 'gcis:Journal' ),
+        ( "prov:label", j['title'] ),
+    ]
+    journal_id = GCIS[j['journal_identifier']]
+    if journal_id not in JOURNALS:
+        if journal_md.get('url', None) is not None:
+            doc_attrs.append( ("prov:location", journal_md['url'] ) )
+        if journal_md.get('online_issn', None) is not None:
+            doc_attrs.append( ("gcis:online_issn", journal_md['online_issn'] ) )
+        if journal_md.get('print_issn', None) is not None:
+            doc_attrs.append( ("gcis:print_issn", journal_md['print_issn'] ) )
+        doc.entity(journal_id, doc_attrs)
+        JOURNALS[journal_id] = True
+
+    # create article
+    article_id = 'bibo:%s' % j['identifier']
     doc_attrs = [
         ( "prov:type", 'gcis:Article' ),
         ( "prov:label", j['title'] ),
-        ( "dcterms:isPartOf", j['journal_identifier'] ),
+        ( "dcterms:isPartOf", journal_id ),
     ]
     if j.get('doi', "") == "": 
         doc_attrs.append( ("bibo:doi", j['doi'] ) )
-    doc.entity('bibo:%s' % j['identifier'], doc_attrs)
+    doc.entity(article_id, doc_attrs)
+
+    # link
+    doc.hadMember(journal_id, article_id)
            
     # serialize
     prov_json = json.loads(doc.serialize())
