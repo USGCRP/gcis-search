@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # facetview-prov-es
 Advanced FacetView User Interface and REST Service for PROV-ES
 
@@ -35,3 +36,13 @@ curl -F "prov_es=<prov_es.json" http://192.168.56.101:8888/api/v0.1/prov_es/impo
 ## Demo
 
 http://prov-es.jpl.nasa.gov/beta
+=======
+#GCIS FacetView
+
+Facet Search interface for GCIS.
+
+## Requirements
+
+Install ElasticSearch
+* http://www.elasticsearch.org
+>>>>>>> e5a7a1ed002df90f31bce54d8fa2493a2752caa9

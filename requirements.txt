@@ -6,7 +6,10 @@ Flask-Login==0.2.11
 Flask-SQLAlchemy==1.0
 Flask-Script==2.0.5
 Flask-WTF==0.10.0
+<<<<<<< HEAD
 Flask-RestPlus==0.6.0
+=======
+>>>>>>> e5a7a1ed002df90f31bce54d8fa2493a2752caa9
 Jinja2==2.7.3
 MarkupSafe==0.23
 Pygments==1.6

@@ -2,6 +2,7 @@
 import os
 
 from flask.ext.script import Manager, Server
+<<<<<<< HEAD
 from fv_prov_es import create_app
 from fv_prov_es.models import db, User
 
@@ -9,6 +10,15 @@ from fv_prov_es.models import db, User
 # production anyway
 env = os.environ.get('PROVES_ENV', 'dev')
 app = create_app('fv_prov_es.settings.%sConfig' % env.capitalize(), env=env)
+=======
+from gcis import create_app
+from gcis.models import db, User
+
+# default to dev config because no one should use this in
+# production anyway
+env = os.environ.get('GCIS_ENV', 'dev')
+app = create_app('gcis.settings.%sConfig' % env.capitalize(), env=env)
+>>>>>>> e5a7a1ed002df90f31bce54d8fa2493a2752caa9
 
 manager = Manager(app)
 manager.add_command("server", Server())

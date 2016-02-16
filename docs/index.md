@@ -82,15 +82,25 @@ This management script was created with Flask-Script and is fairly easy to add y
 
 Before going to far into this, you should at least skim the documentation of all of the thrid party libraries listed above so you have a better understanding of what is going on here.
 
+<<<<<<< HEAD
 The flask application itself lives in the fv_prov_es directory. Obviously, you change this to the name of your application. Once you do though, you must go through and fix all of the imports where it uses the fv_prov_es name. The easiest way to find them all is to type
 
     grep -R fv_prov_es *
+=======
+The flask application itself lives in the gcis directory. Obviously, you change this to the name of your application. Once you do though, you must go through and fix all of the imports where it uses the gcis name. The easiest way to find them all is to type
+
+    grep -R gcis *
+>>>>>>> e5a7a1ed002df90f31bce54d8fa2493a2752caa9
 
 To make things organized, this project is in a pseudo MVC setup. With the controllers as flask blueprints, the models as SQLAlchemy models, and the views as the templates.
 
 The main logic of the application is in the \_\_init\_\_.py. This is done so that the application is treated as a module by python which helps later when importing things. Here, we setup all of the third party libs and load in our configuration in an application factory, which is a function that creates and returns an instance of our application. This is done for easier testing purposes and modularity. The function create\_app takes the path of the config file that you want to use and the type of environment that the server is running in. Most of the library initialization is self explanatory, but let me explain the configuration loading. In your shell's startup script (if you are using bash, its .bash_profile), you must enter this line:
 
+<<<<<<< HEAD
     PROVES_ENV = 'dev' or PROVES_ENV='prod'
+=======
+    GCIS_ENV = 'dev' or GCIS_ENV='prod'
+>>>>>>> e5a7a1ed002df90f31bce54d8fa2493a2752caa9
 
 This tells the application which class, located in settings.py, to load in for the configuration. To see the different configs, take a look at the settings.py file. This is explained more in depth in the flask docs [here](http://flask.pocoo.org/docs/config/#development-production).
 
@@ -118,7 +128,11 @@ The models in this application are SQLAlchemy models in the models.py file, an e
 
 If you are still confused about how this project is structured, I encourage you to read the blog posts listed at the top of the README file.
 
+<<<<<<< HEAD
 Lets talk about the tests. All of the tests are in the test_fv_prov_es.py file, and the tests are run with py.test. Nothing is to fancy in the first test class, but in the next one we see some special initialization with the database, this is due to flask not actually running and Flask-SQLAlechmy not being initialized properly. Also, we see here the use of app.test\_client(), which means we can use functions to send GET and POST requests from our tests. This is how we test our forms and if the urls are returning correctly.
+=======
+Lets talk about the tests. All of the tests are in the test_gcis.py file, and the tests are run with py.test. Nothing is to fancy in the first test class, but in the next one we see some special initialization with the database, this is due to flask not actually running and Flask-SQLAlechmy not being initialized properly. Also, we see here the use of app.test\_client(), which means we can use functions to send GET and POST requests from our tests. This is how we test our forms and if the urls are returning correctly.
+>>>>>>> e5a7a1ed002df90f31bce54d8fa2493a2752caa9
 
 ##Production
 First off, it is very, very important that if you ever open source a flask application based upon this, to not include the settings.py file in your repo. Obviously, your database password is in it, but your secret key as well, which is used to cryptographically sign all of flask's session data.

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -50,3 +51,43 @@ docs/_build/
 
 # PyBuilder
 target/
+=======
+*.pyc
+*.pyo
+*.swp
+*~
+
+# Packages
+*.egg
+*.egg-info
+build/
+eggs
+bin
+sdist
+
+#Sphinx builds
+_build
+
+# Installer logs
+pip-log.txt
+
+# Flake8 violation file
+violations.flake8.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+__pycache__
+database.db
+
+# Sphinx
+docs/_build
+
+# Virtual environments
+env
+env*
+
+.webassets-cache
+*.sublime-*
+>>>>>>> e5a7a1ed002df90f31bce54d8fa2493a2752caa9
