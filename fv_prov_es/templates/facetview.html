@@ -190,8 +190,8 @@ jQuery(document).ready(function($) {
         {'field':'gcis:inPlatform.raw', 'display': 'gcis:inPlatform'},
         {'field':'gcis:hasSensor.raw', 'display': 'gcis:hasSensor'},
         {'field':'gcis:hasGoverningOrganization.raw', 'display': 'gcis:hasGoverningOrganization'},
-        {'field':'prov:startTime', 'display': 'prov:startTime', 'type': 'date'},
-        {'field':'prov:endTime', 'display': 'prov:endTime', 'type': 'date'},
+        //{'field':'prov:startTime', 'display': 'prov:startTime', 'type': 'date'},
+        //{'field':'prov:endTime', 'display': 'prov:endTime', 'type': 'date'},
         {'field':'prov:collection.raw', 'display': 'prov:collection'},
         {'field':'eos:level.raw', 'display': 'eos:level'},
         {'field':'gcis:describedBy.raw', 'display': 'gcis:describedBy'},
@@ -206,7 +206,8 @@ jQuery(document).ready(function($) {
     json_fields: [
         'prov:used',
         'prov:generated',
-        'prov:type'
+        'prov:type',
+        'prov:label'
     ],
     filterchoice_result_fields: {
         //'_id': '_id'
@@ -221,6 +222,7 @@ jQuery(document).ready(function($) {
     sort: [{ '_timestamp': { "order": "desc"} }],
     fields: [ '_id', '_timestamp', '_source'],
     display_images: false,
+    /***
     pre_search_callback: function() {
       if (backdrop === null) {
         // fade the backdrop in
@@ -237,6 +239,7 @@ jQuery(document).ready(function($) {
       $(".loading-backdrop").remove();
       backdrop = null;
     },
+    ***/
     word_cloud: false,
     result_display: [
       [
@@ -291,6 +294,9 @@ jQuery(document).ready(function($) {
           "post": "';\n" +
                  "  var strong = $(jq('header_' + id));\n" +
                   "  if (label !== null) {\n" +
+                  "    if (label[0] == '{') {\n" +
+                  "      label = JSON.parse(label)['$'];\n" +
+                  "    }\n" +
                   "    strong.text(label);\n" +
                   "  }else {\n" +
                   "    strong.text(id);\n" +

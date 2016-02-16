@@ -13,9 +13,9 @@ class Config(object):
     PROV_EXPANSION_CFG = "../config/prov_expansion_map.json"
 
     # title and descriptions
-    TITLE = "PROV-ES Facet Search"
-    DESCRIPTION = "faceted search interface for earth science provenance"
-    BADGE = "BETA"
+    TITLE = "GCIS Provenance"
+    DESCRIPTION = "PROV-ES faceted search interface for GCIS"
+    BADGE = "DEV"
 
     # max lineage nodes to add to FDL per query; if exceeded, prompt user
     LINEAGE_NODES_MAX = 50
