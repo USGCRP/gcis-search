@@ -1,0 +1,66 @@
+{
+  "_id": {
+    "path": "identifier", 
+    "type": "string", 
+    "store": "yes", 
+    "index": "not_analyzed"
+  }, 
+  "_timestamp": {
+    "enabled": true, 
+    "store": "yes"
+  },
+  "properties": {
+    "identifier": {
+      "fields": {
+        "raw": {
+          "index": "not_analyzed", 
+          "type": "string"
+        }, 
+        "identifier": {
+          "index": "analyzed", 
+          "type": "string"
+        }
+      }, 
+      "type": "multi_field"
+    },
+    "chapter_identifier": {
+      "fields": {
+        "raw": {
+          "index": "not_analyzed", 
+          "type": "string"
+        }, 
+        "chapter_identifier": {
+          "index": "analyzed", 
+          "type": "string"
+        }
+      }, 
+      "type": "multi_field"
+    },
+    "report_identifier": {
+      "fields": {
+        "raw": {
+          "index": "not_analyzed", 
+          "type": "string"
+        }, 
+        "report_identifier": {
+          "index": "analyzed", 
+          "type": "string"
+        }
+      }, 
+      "type": "multi_field"
+    },
+    "title": {
+      "fields": {
+        "raw": {
+          "index": "not_analyzed", 
+          "type": "string"
+        }, 
+        "title": {
+          "index": "analyzed", 
+          "type": "string"
+        }
+      }, 
+      "type": "multi_field"
+    }
+  }
+}
