@@ -6,3 +6,6 @@ Facet Search interface for GCIS.
 
 Install ElasticSearch
 * http://www.elasticsearch.org
+
+Demo:
+https://gcis-search-stage.jpl.net/search
