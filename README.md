@@ -29,3 +29,15 @@ https://gcis-search-stage.jpl.net/search
   ```
   pip install -r requirements.txt
   ```
+
+4. Create db:
+  ```
+  ./manage.py createdb
+  ```
+
+5. Run server:
+  ```
+  ./manage.py server -h 0.0.0.0
+  ```
+
+6. Access interface in browser: http://<host IP address>:5000
