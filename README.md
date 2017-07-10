@@ -4,7 +4,7 @@ Facet Search interface for GCIS.
 
 ## Requirements
 
-Install ElasticSearch
+Install ElasticSearch (only tested with version 1.7.X)
 * http://www.elasticsearch.org
 
 Demo:
