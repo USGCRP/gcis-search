@@ -30,14 +30,35 @@ https://gcis-search-stage.jpl.net/search
   pip install -r requirements.txt
   ```
 
-4. Create db:
+4. Build gcis:
+  ```
+  python setup.py develop
+  ```
+
+5. Create db:
   ```
   ./manage.py createdb
   ```
 
-5. Run server:
+6. Install GCIS ES template:
+  ```
+  cd scripts
+  ./install_gcis_template.sh http://localhost:9200 gcis ../config/es_template-gcis.json
+  ```
+
+7. Download GCIS data:
+  ```
+  ./download_gcis_data.py
+  ```
+
+8. Import GCIS data:
+  ```
+  ./import_gcis_data.py
+  ```
+
+9. Run server:
   ```
   ./manage.py server -h 0.0.0.0
   ```
 
-6. Access interface in browser: http://<host IP address>:5000
+10. Access interface in browser: http://<host IP address>:5000
