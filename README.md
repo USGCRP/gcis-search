@@ -1,5 +1,7 @@
 # GCIS FacetView
 
+[![Build Status](https://travis-ci.org/USGCRP/gcis-search.svg?branch=master)](https://travis-ci.org/USGCRP/gcis-search/branches) 
+
 Facet Search interface for GCIS.
 
 ## Requirements
